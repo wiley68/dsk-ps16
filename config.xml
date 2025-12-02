@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <module>
 	<name>dskpayment</name>
-	<displayName><![CDATA[DSK Credit API покупки на Кредит]]></displayName>
-	<version><![CDATA[1.1.1]]></version>
-	<description><![CDATA[Дава възможност на Вашите клиенти да закупуват стока на изплащане с DSK Credit API.]]></description>
+	<displayName><![CDATA[Банка ДСК покупки на Кредит]]></displayName>
+	<version><![CDATA[1.2.0]]></version>
+	<description><![CDATA[Дава възможност на Вашите клиенти да закупуват стока на изплащане с Банка ДСК.]]></description>
 	<author><![CDATA[Ilko Ivanov]]></author>
 	<tab><![CDATA[payments_gateways]]></tab>
 	<is_configurable>1</is_configurable>
