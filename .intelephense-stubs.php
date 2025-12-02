@@ -397,6 +397,19 @@ class Cart
     public $id;
     /** @var int */
     public $id_currency;
+
+    /**
+     * Get products from cart
+     * @param bool $refresh Refresh cart products
+     * @param int|null $id_product Product ID filter
+     * @param int|null $id_country Country ID filter
+     * @param bool $full Get full product details
+     * @return array Array of cart products
+     */
+    public function getProducts($refresh = false, $id_product = false, $id_country = null, $full = false)
+    {
+        return array();
+    }
 }
 
 /**
@@ -612,7 +625,16 @@ class Module
         return '';
     }
     public function registerHook($hook_name) {}
-    public function display($file, $template) {}
+    /**
+     * Display a template file
+     * @param string $file Module file path (usually __FILE__)
+     * @param string $template Template file path relative to module
+     * @return string HTML output
+     */
+    public function display($file, $template)
+    {
+        return '';
+    }
     /**
      * Display a confirmation message
      * @param string $message
