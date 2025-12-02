@@ -393,10 +393,22 @@ class ProductController {}
  */
 class Cart
 {
+    const ONLY_PRODUCTS = 1;
+    const ONLY_DISCOUNTS = 2;
+    const BOTH = 3;
+    const ONLY_SHIPPING = 4;
+    const ONLY_WRAPPING = 5;
+    const ONLY_PRODUCTS_WITHOUT_SHIPPING = 6;
+    const ONLY_PHYSICAL_PRODUCTS_WITHOUT_SHIPPING = 7;
+
     /** @var int */
     public $id;
     /** @var int */
     public $id_currency;
+    /** @var int */
+    public $id_address_delivery;
+    /** @var int */
+    public $id_address_invoice;
 
     /**
      * Get products from cart
@@ -409,6 +421,18 @@ class Cart
     public function getProducts($refresh = false, $id_product = false, $id_country = null, $full = false)
     {
         return array();
+    }
+
+    /**
+     * Get order total
+     * @param bool $with_taxes Include taxes
+     * @param int $type Order total type
+     * @param bool $use_cache Use cache
+     * @return float
+     */
+    public function getOrderTotal($with_taxes = true, $type = Cart::BOTH, $use_cache = true)
+    {
+        return 0.0;
     }
 }
 
@@ -468,6 +492,11 @@ class Link
  */
 class Controller
 {
+    /** @var Context */
+    public $context;
+    /** @var string */
+    public $php_self;
+
     /**
      * Add CSS file
      * @param string $css_uri
@@ -486,6 +515,67 @@ class Controller
 }
 
 /**
+ * FrontController is a PrestaShop base front controller class
+ * Located in: classes/controller/FrontController.php
+ */
+class FrontController extends Controller
+{
+    /** @var bool */
+    public $ssl;
+    /** @var bool */
+    public $display_column_left;
+    /** @var Module */
+    public $module;
+
+    /**
+     * Initialize content
+     * @return void
+     */
+    public function initContent() {}
+
+    /**
+     * Set template
+     * @param string $template
+     * @return void
+     */
+    public function setTemplate($template) {}
+}
+
+/**
+ * ModuleFrontController is a PrestaShop base class for module front controllers
+ * Located in: classes/controller/ModuleFrontController.php
+ */
+class ModuleFrontController extends FrontController {}
+
+/**
+ * Customer is a PrestaShop core class for customers
+ * Located in: classes/Customer.php
+ */
+class Customer
+{
+    /** @var int */
+    public $id;
+    /** @var string */
+    public $firstname;
+    /** @var string */
+    public $lastname;
+    /** @var string */
+    public $email;
+    /** @var int */
+    public $id_lang;
+
+    /**
+     * Get customer addresses
+     * @param int $id_lang
+     * @return array
+     */
+    public function getAddresses($id_lang)
+    {
+        return array();
+    }
+}
+
+/**
  * Context is a PrestaShop core class that holds context information
  * Located in: classes/Context.php
  */
@@ -501,6 +591,8 @@ class Context
     public $link;
     /** @var Controller */
     public $controller;
+    /** @var Customer */
+    public $customer;
 }
 
 /**
@@ -511,6 +603,8 @@ class Currency
 {
     /** @var int */
     public $id;
+    /** @var string */
+    public $iso_code;
 
     /**
      * @param int|null $id

@@ -4,11 +4,11 @@
     * @Author e-mail: ilko.iv@gmail.com
     * @Publisher: Avalon Ltd
     * @Publisher e-mail: home@avalonbg.com
-    * @Owner: Avalon Ltd
-    * @Version: 1.1.1
+    * @Owner: Банка ДСК
+    * @Version: 1.2.0
 *}
 {capture name=path}
-    <a href="{$link->getPageLink('order', true, NULL, "step=3")|escape:'html':'UTF-8'}" title="{l s='Обратно към методи на плащане' mod='dskpayment'}">{l s='Методи на плащане' mod='dskpayment'}</a><span class="navigation-pipe">{$navigationPipe}</span>{l s='DSK Credit API покупки на Кредит' mod='dskpayment'}
+    <a href="{$link->getPageLink('order', true, NULL, "step=3")|escape:'html':'UTF-8'}" title="{l s='Обратно към методи на плащане' mod='dskpayment'}">{l s='Методи на плащане' mod='dskpayment'}</a><span class="navigation-pipe">{$navigationPipe}</span>{l s='Банка ДСК покупки на Кредит' mod='dskpayment'}
 {/capture}
 {* {include file="$tpl_dir./breadcrumb.tpl"} *}
 {assign var='current_step' value='payment'}
@@ -17,12 +17,9 @@
     <p class="warning">{l s='Вашата кошница е празна ' mod='dskpayment'}</p>
 {else}
 <h3>{l s='С избора си да финансирате покупката чрез Банка ДСК Вие декларирате, че сте запознат с Информацията относно обработването на лични данни на физически лица от Банка ДСК АД.' mod='dskpayment'}</h3>
-<a target="_blank" href="https://dskbank.bg/docs/default-source/gdpr/%D0%B8%D0%BD%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%86%D0%B8%D1%8F-%D0%BE%D1%82%D0%BD%D0%BE%D1%81%D0%BD%D0%BE-%D0%BE%D0%B1%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B2%D0%B0%D0%BD%D0%B5%D1%82%D0%BE-%D0%BD%D0%B0-%D0%BB%D0%B8%D1%87%D0%BD%D0%B8-%D0%B4%D0%B0%D0%BD%D0%BD%D0%B8-%D0%BD%D0%B0-%D1%84%D0%B8%D0%B7%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8-%D0%BB%D0%B8%D1%86%D0%B0-%D0%BE%D1%82-%D0%B1%D0%B0%D0%BD%D0%BA%D0%B0-%D0%B4%D1%81%D0%BA-%D0%B0%D0%B4-%D0%B8-%D1%81%D1%8A%D0%B3%D0%BB%D0%B0%D1%81%D0%B8%D1%8F-%D0%B7%D0%B0-%D0%BE%D0%B1%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B2%D0%B0%D0%BD%D0%B5-%D0%BD%D0%B0-%D0%BB%D0%B8%D1%87%D0%BD%D0%B8-%D0%B4%D0%B0%D0%BD%D0%BD%D0%B8.pdf">Информация относно обработването на лични данни на физически лица от 'Банка ДСК' АД</a>
+<a target="_blank" href="https://dskbank.bg/docs/default-source/gdpr/%D0%B8%D0%BD%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%86%D0%B8%D1%8F-%D0%BE%D1%82%D0%BD%D0%BE%D1%81%D0%BD%D0%BE-%D0%BE%D0%B1%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B2%D0%B0%D0%BD%D0%B5%D1%82%D0%BE-%D0%BD%D0%B0-%D0%BB%D0%B8%D1%87%D0%BD%D0%B8-%D0%B4%D0%B0%D0%BD%D0%BD%D0%B8-%D0%BD%D0%B0-%D1%84%D0%B8%D0%B7%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8-%D0%BB%D0%B8%D1%86%D0%B0-%D0%BE%D1%82-%D0%B1%D0%B0%D0%BD%D0%BA%D0%B0-%D0%B4%D1%81%D0%BA-%D0%B0%D0%B4-%D0%B8-%D1%81%D1%8A%D0%B3%D0%BB%D0%B0%D1%81%D0%B8%D1%8F-%D0%B7%D0%B0-%D0%BE%D0%B1%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B2%D0%B0%D0%BD%D0%B5-%D0%BD%D0%B0-%D0%BB%D0%B8%D1%87%D0%BD%D0%B8-%D0%B4%D0%B0%D0%BD%D0%BD%D0%B8.pdf">Информация относно обработването на лични данни на физически лица от Банка ДСК АД</a>
+<br /><br />
 <form action="{$link->getModuleLink('dskpayment', 'validation', [], true)|escape:'html'}" method="post">
-    <p>
-        <img src="{$dskapi_this_path_bw}logo.png" alt="{l s='DSK Credit API покупки на Кредит' mod='bnplpayment'}" style="float:left; margin: 0px 10px 5px 0px;" />
-    </p>
-    <br /><br /><br /><br />
     <input type="hidden" name="dskapi_firstname" id="dskapi_firstname" value="{$dskapi_firstname}" />
     <input type="hidden" name="dskapi_lastname" id="dskapi_lastname" value="{$dskapi_lastname}" />
     <input type="hidden" name="dskapi_phone" id="dskapi_phone" value="{$dskapi_phone}" />
