@@ -12,6 +12,12 @@ if (!defined('_DB_PREFIX_')) {
 if (!defined('_MYSQL_ENGINE_')) {
     define('_MYSQL_ENGINE_', 'InnoDB');
 }
+if (!defined('_PS_MODULE_DIR_')) {
+    define('_PS_MODULE_DIR_', '/modules/');
+}
+if (!defined('__PS_BASE_URI__')) {
+    define('__PS_BASE_URI__', '/');
+}
 
 /**
  * pSQL is a PrestaShop helper function for SQL escaping
@@ -235,6 +241,216 @@ class Language
 }
 
 /**
+ * Tools is a PrestaShop utility class
+ * Located in: classes/Tools.php
+ */
+class Tools
+{
+    /**
+     * Check if a form has been submitted
+     * @param string $key
+     * @return bool
+     */
+    public static function isSubmit($key)
+    {
+        return false;
+    }
+
+    /**
+     * Get a value from $_GET or $_POST
+     * @param string $key
+     * @param mixed $default_value
+     * @return mixed
+     */
+    public static function getValue($key, $default_value = false)
+    {
+        return $default_value;
+    }
+
+    /**
+     * Get admin token for a controller
+     * @param string $controller
+     * @return string
+     */
+    public static function getAdminTokenLite($controller)
+    {
+        return '';
+    }
+
+    /**
+     * Add a JavaScript file
+     * @param string $js_uri
+     * @param string|null $css_media_type
+     * @return void
+     */
+    public static function addJS($js_uri, $css_media_type = null) {}
+
+    /**
+     * Add a CSS file
+     * @param string $css_uri
+     * @param string|null $css_media_type
+     * @return void
+     */
+    public static function addCSS($css_uri, $css_media_type = null) {}
+
+    /**
+     * Get shop domain with SSL
+     * @param bool $http
+     * @param bool $entities
+     * @return string
+     */
+    public static function getShopDomainSsl($http = false, $entities = false)
+    {
+        return '';
+    }
+}
+
+/**
+ * HelperForm is a PrestaShop helper class for generating admin forms
+ * Located in: classes/helper/HelperForm.php
+ */
+class HelperForm
+{
+    /** @var Module */
+    public $module;
+    /** @var string */
+    public $name_controller;
+    /** @var string */
+    public $token;
+    /** @var string */
+    public $currentIndex;
+    /** @var int */
+    public $default_form_language;
+    /** @var int */
+    public $allow_employee_form_lang;
+    /** @var string */
+    public $title;
+    /** @var bool */
+    public $show_toolbar;
+    /** @var bool */
+    public $toolbar_scroll;
+    /** @var string */
+    public $submit_action;
+    /** @var array */
+    public $toolbar_btn;
+    /** @var array */
+    public $fields_value;
+
+    /**
+     * Generate form HTML
+     * @param array $fields_form
+     * @return string HTML output
+     */
+    public function generateForm($fields_form)
+    {
+        return '';
+    }
+}
+
+/**
+ * AdminController is a PrestaShop base class for admin controllers
+ * Located in: classes/controller/AdminController.php
+ */
+class AdminController
+{
+    /** @var string */
+    public static $currentIndex;
+}
+
+/**
+ * ProductController is a PrestaShop front controller for product pages
+ * Located in: controllers/front/ProductController.php
+ */
+class ProductController {}
+
+/**
+ * Currency is a PrestaShop core class for currencies
+ * Located in: classes/Currency.php
+ */
+class Currency
+{
+    /** @var int */
+    public $id;
+
+    /**
+     * @param int|null $id
+     */
+    public function __construct($id = null) {}
+}
+
+/**
+ * Product is a PrestaShop core class for products
+ * Located in: classes/Product.php
+ */
+class Product
+{
+    /**
+     * @param int|null $id
+     */
+    public function __construct($id = null) {}
+
+    /**
+     * Get product price statically
+     * @param int $id_product
+     * @param bool $usetax
+     * @param int|null $id_product_attribute
+     * @param int $decimals
+     * @param int|null $divisor
+     * @param bool $only_reduc
+     * @param bool $usereduc
+     * @param int $quantity
+     * @param bool $force_associated_tax
+     * @param int|null $id_customer
+     * @param int|null $id_cart
+     * @param int|null $id_address
+     * @param mixed $specific_price_output
+     * @param bool $with_ecotax
+     * @param bool $use_group_reduction
+     * @param Context|null $context
+     * @param bool $use_customer_price
+     * @return float
+     */
+    public static function getPriceStatic(
+        $id_product,
+        $usetax = true,
+        $id_product_attribute = null,
+        $decimals = 6,
+        $divisor = null,
+        $only_reduc = false,
+        $usereduc = true,
+        $quantity = 1,
+        $force_associated_tax = false,
+        $id_customer = null,
+        $id_cart = null,
+        $id_address = null,
+        $specific_price_output = null,
+        $with_ecotax = true,
+        $use_group_reduction = true,
+        $context = null,
+        $use_customer_price = true
+    ) {
+        return 0.0;
+    }
+}
+
+/**
+ * Media is a PrestaShop utility class for media files
+ * Located in: classes/Media.php
+ */
+class Media
+{
+    /**
+     * Get media path
+     * @param string $path
+     * @return string
+     */
+    public static function getMediaPath($path)
+    {
+        return '';
+    }
+}
+
+/**
  * Module is the base class for all PrestaShop modules
  * Located in: classes/module/Module.php
  */
@@ -258,11 +474,46 @@ class Module
     public function __construct() {}
     public function install() {}
     public function uninstall() {}
-    public function l($string, $specific = false) {}
+    /**
+     * Translate a string
+     * @param string $string String to translate
+     * @param bool|string $specific Specific file name or false
+     * @return string Translated string
+     */
+    public function l($string, $specific = false)
+    {
+        return '';
+    }
     public function registerHook($hook_name) {}
     public function display($file, $template) {}
-    public function displayConfirmation($message) {}
-    public function getCurrency($id_currency) {}
+    /**
+     * Display a confirmation message
+     * @param string $message
+     * @return string HTML output
+     */
+    public function displayConfirmation($message)
+    {
+        return '';
+    }
+    /**
+     * Get currencies for a payment module
+     * @param int $id_currency
+     * @return array|false Array of currencies or false
+     */
+    public function getCurrency($id_currency)
+    {
+        return false;
+    }
+
+    /**
+     * Get module instance by name
+     * @param string $module_name
+     * @return Module|null Module instance or null if not found
+     */
+    public static function getInstanceByName($module_name)
+    {
+        return null;
+    }
 }
 
 /**
