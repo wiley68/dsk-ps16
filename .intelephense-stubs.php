@@ -431,6 +431,22 @@ class Link
     {
         return '';
     }
+
+    /**
+     * Get page link
+     * @param string $controller
+     * @param bool $ssl
+     * @param int|null $id_lang
+     * @param array $request
+     * @param bool $request_url_encode
+     * @param bool $id_shop
+     * @param bool $relative_protocol
+     * @return string
+     */
+    public function getPageLink($controller, $ssl = null, $id_lang = null, $request = array(), $request_url_encode = false, $id_shop = null, $relative_protocol = false)
+    {
+        return '';
+    }
 }
 
 /**
