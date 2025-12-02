@@ -429,30 +429,24 @@ class Dskpayment extends PaymentModule
     public function hookPayment($params)
     {
         if (!$this->active)
-            return;
+            return '';
+
         if (!$this->checkCurrency($params['cart']))
-            return;
+            return '';
 
         $dskapi_status = (int)Configuration::get('dskapi_status');
         $dskapi_currency_code = $this->context->currency->iso_code;
         if ($dskapi_status == 0 || ($dskapi_currency_code != 'EUR' && $dskapi_currency_code != 'BGN'))
-            return null;
+            return '';
 
         $dskapi_cid = (string)Configuration::get('dskapi_cid');
         $cart = $this->context->cart;
-        $dskapi_price = floatval($cart->getOrderTotal(true));
+        $dskapi_price = (float) $cart->getOrderTotal(true);
 
-        $dskapi_ch = curl_init();
-        curl_setopt($dskapi_ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($dskapi_ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($dskapi_ch, CURLOPT_MAXREDIRS, 3);
-        curl_setopt($dskapi_ch, CURLOPT_TIMEOUT, 6);
-        curl_setopt($dskapi_ch, CURLOPT_URL, DSKAPI_LIVEURL . '/function/getminmax.php?cid=' . $dskapi_cid);
-        $paramsdskapi = json_decode(curl_exec($dskapi_ch), true);
-        curl_close($dskapi_ch);
-
-        if (empty($paramsdskapi))
-            return null;
+        $paramsdskapi = $this->makeApiRequest('/function/getminmax.php?cid=' . urlencode($dskapi_cid), 6);
+        if ($paramsdskapi === null) {
+            return '';
+        }
 
         $dskapi_eur = (int)$paramsdskapi['dsk_eur'];
         switch ($dskapi_eur) {
@@ -460,29 +454,29 @@ class Dskpayment extends PaymentModule
                 break;
             case 1:
                 if ($dskapi_currency_code == "EUR") {
-                    $dskapi_price = number_format($dskapi_price * 1.95583, 2, ".", "");
+                    $dskapi_price = (float) number_format($dskapi_price * 1.95583, 2, ".", "");
                 }
                 break;
             case 2:
                 $dskapi_sign = "евро";
                 if ($dskapi_currency_code == "BGN") {
-                    $dskapi_price = number_format($dskapi_price / 1.95583, 2, ".", "");
+                    $dskapi_price = (float) number_format($dskapi_price / 1.95583, 2, ".", "");
                 }
                 break;
         }
-        $dskapi_minstojnost = floatval($paramsdskapi['dsk_minstojnost']);
-        $dskapi_maxstojnost = floatval($paramsdskapi['dsk_maxstojnost']);
-        $dskapi_min_000 = floatval($paramsdskapi['dsk_min_000']);
+        $dskapi_minstojnost = (float) $paramsdskapi['dsk_minstojnost'];
+        $dskapi_maxstojnost = (float) $paramsdskapi['dsk_maxstojnost'];
+        $dskapi_min_000 = (float) $paramsdskapi['dsk_min_000'];
         $dskapi_status_cp = $paramsdskapi['dsk_status'];
 
-        $dskapi_purcent = floatval($paramsdskapi['dsk_purcent']);
-        $dskapi_vnoski_default = intval($paramsdskapi['dsk_vnoski_default']);
+        $dskapi_purcent = (float) $paramsdskapi['dsk_purcent'];
+        $dskapi_vnoski_default = (int) $paramsdskapi['dsk_vnoski_default'];
         if (($dskapi_purcent == 0) && ($dskapi_vnoski_default <= 6)) {
             $dskapi_minstojnost = $dskapi_min_000;
         }
 
         if (($dskapi_status_cp == 0) || ($dskapi_price < $dskapi_minstojnost) || ($dskapi_price > $dskapi_maxstojnost)) {
-            return null;
+            return '';
         } else {
             $this->smarty->assign(array(
                 'dskapithis_path' => $this->_path,
@@ -501,7 +495,7 @@ class Dskpayment extends PaymentModule
             return;
 
         $payment_options = array(
-            'cta_text' => $this->l('Pay by DSK API Credit'),
+            'cta_text' => $this->l('Банка ДСК покупки на Кредит'),
             'action' => $this->context->link->getModuleLink($this->name, 'validation', array(), true)
         );
         return $payment_options;
