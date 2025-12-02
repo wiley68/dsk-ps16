@@ -6,6 +6,7 @@
 	<description><![CDATA[Дава възможност на Вашите клиенти да закупуват стока на изплащане с Банка ДСК.]]></description>
 	<author><![CDATA[Ilko Ivanov]]></author>
 	<tab><![CDATA[payments_gateways]]></tab>
+	<confirmUninstall><![CDATA[Сигурни ли сте, че желаете да го деинсталирате?]]></confirmUninstall>
 	<is_configurable>1</is_configurable>
 	<need_instance>1</need_instance>
 	<limited_countries></limited_countries>

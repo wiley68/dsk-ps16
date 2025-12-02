@@ -45,7 +45,10 @@ class Shop
     /**
      * @return bool
      */
-    public static function isFeatureActive() {}
+    public static function isFeatureActive()
+    {
+        return false;
+    }
 
     /**
      * @param int $context
@@ -67,7 +70,10 @@ class Configuration
      * @param int|null $id_shop
      * @return mixed
      */
-    public static function get($key, $id_lang = null, $id_shop_group = null, $id_shop = null) {}
+    public static function get($key, $id_lang = null, $id_shop_group = null, $id_shop = null)
+    {
+        return null;
+    }
 
     /**
      * @param string $key
@@ -77,13 +83,19 @@ class Configuration
      * @param int|null $id_shop
      * @return bool
      */
-    public static function updateValue($key, $values, $html = false, $id_shop_group = null, $id_shop = null) {}
+    public static function updateValue($key, $values, $html = false, $id_shop_group = null, $id_shop = null)
+    {
+        return false;
+    }
 
     /**
      * @param string $key
      * @return bool
      */
-    public static function deleteByName($key) {}
+    public static function deleteByName($key)
+    {
+        return false;
+    }
 }
 
 /**
@@ -96,25 +108,37 @@ class DbQuery
      * @param string $fields
      * @return self
      */
-    public function select($fields) {}
+    public function select($fields)
+    {
+        return $this;
+    }
 
     /**
      * @param string $table
      * @return self
      */
-    public function from($table) {}
+    public function from($table)
+    {
+        return $this;
+    }
 
     /**
      * @param string $condition
      * @return self
      */
-    public function where($condition) {}
+    public function where($condition)
+    {
+        return $this;
+    }
 
     /**
      * @param string $order
      * @return self
      */
-    public function orderBy($order) {}
+    public function orderBy($order)
+    {
+        return $this;
+    }
 }
 
 /**
@@ -362,6 +386,93 @@ class AdminController
  * Located in: controllers/front/ProductController.php
  */
 class ProductController {}
+
+/**
+ * Cart is a PrestaShop core class for shopping carts
+ * Located in: classes/Cart.php
+ */
+class Cart
+{
+    /** @var int */
+    public $id;
+    /** @var int */
+    public $id_currency;
+}
+
+/**
+ * Smarty is the template engine used by PrestaShop
+ */
+class Smarty
+{
+    /**
+     * Assign a variable to the template
+     * @param string|array $tpl_var
+     * @param mixed $value
+     * @return void
+     */
+    public function assign($tpl_var, $value = null) {}
+}
+
+/**
+ * Link is a PrestaShop core class for generating URLs
+ * Located in: classes/Link.php
+ */
+class Link
+{
+    /**
+     * Get module link
+     * @param string $module
+     * @param string $controller
+     * @param array $params
+     * @param bool $ssl
+     * @return string
+     */
+    public function getModuleLink($module, $controller, $params = array(), $ssl = false)
+    {
+        return '';
+    }
+}
+
+/**
+ * Controller is a PrestaShop base controller class
+ * Located in: classes/controller/Controller.php
+ */
+class Controller
+{
+    /**
+     * Add CSS file
+     * @param string $css_uri
+     * @param string|null $css_media_type
+     * @return void
+     */
+    public function addCSS($css_uri, $css_media_type = null) {}
+
+    /**
+     * Add JavaScript file
+     * @param string $js_uri
+     * @param string|null $css_media_type
+     * @return void
+     */
+    public function addJS($js_uri, $css_media_type = null) {}
+}
+
+/**
+ * Context is a PrestaShop core class that holds context information
+ * Located in: classes/Context.php
+ */
+class Context
+{
+    /** @var Currency */
+    public $currency;
+    /** @var Cart */
+    public $cart;
+    /** @var Smarty */
+    public $smarty;
+    /** @var Link */
+    public $link;
+    /** @var Controller */
+    public $controller;
+}
 
 /**
  * Currency is a PrestaShop core class for currencies

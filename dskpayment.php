@@ -27,12 +27,10 @@ class Dskpayment extends PaymentModule
 
     const HOOKS = [
         'actionFrontControllerSetMedia',
-        'displayRightColumnProduct',
         'payment',
         'displayHome',
         'displayPaymentEU',
-        'displayReassurance',
-        'displayHome'
+        'displayReassurance'
     ];
 
     public function __construct()
@@ -513,15 +511,33 @@ class Dskpayment extends PaymentModule
      */
     public function hookActionFrontControllerSetMedia($params)
     {
-        // Зареждане на CSS файлове
-        $this->context->controller->addCSS($this->_path . 'css/dskapi_product.css');
-        $this->context->controller->addCSS($this->_path . 'css/dskapi_rek.css');
+        // PrestaShop 1.6.x използва addCSS() и addJS() вместо registerStylesheet() и registerJavascript()
+        if (isset($this->context->controller->php_self) && 'index' === $this->context->controller->php_self) {
+            $homeCssPath = _PS_MODULE_DIR_ . $this->name . '/css/dskapi_rek.css';
+            $homeJsPath = _PS_MODULE_DIR_ . $this->name . '/js/dskapi_rek.js';
 
-        // Зареждане на JavaScript файлове
-        $this->context->controller->addJS($this->_path . 'js/dskapi_product.js');
+            // Зареждане на CSS файл
+            // В PrestaShop 1.6.x addCSS() може да не поддържа query strings правилно за CSS файлове
+            // Затова използваме версия като част от пътя чрез директория или използваме пълен URL
+            if (file_exists($homeCssPath)) {
+                $cssVersion = filemtime($homeCssPath);
+                // Опит 1: Използване на пълен URL с версия
+                $cssUrl = Tools::getShopDomainSsl(true, true) . __PS_BASE_URI__ . 'modules/' . $this->name . '/css/dskapi_rek.css?v=' . $cssVersion;
+                $this->context->controller->addCSS($cssUrl, 'all');
+            }
+
+            // Зареждане на JavaScript файл с версиониране чрез filemtime
+            if (file_exists($homeJsPath)) {
+                $jsVersion = filemtime($homeJsPath);
+                $this->context->controller->addJS(
+                    $this->_path . 'js/dskapi_rek.js?v=' . $jsVersion,
+                    'all'
+                );
+            }
+        }
     }
 
-    public function hookDisplayRightColumnProduct($params)
+    public function hookDisplayReassurance($params)
     {
         if ($this->context->controller instanceof ProductController) {
             $dskapi_status = (int)Configuration::get('dskapi_status');
@@ -1044,15 +1060,6 @@ class Dskpayment extends PaymentModule
         }
     }
 
-    public function hookDisplayLeftColumnProduct($params)
-    {
-        return $this->hookDisplayRightColumnProduct($params);
-    }
-
-    public function hookDisplayReassurance($params)
-    {
-        return $this->hookDisplayRightColumnProduct($params);
-    }
 
     /**
      * Извършва API заявка и връща декодирания JSON отговор
