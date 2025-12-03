@@ -581,6 +581,38 @@ class Dskpayment extends PaymentModule
                 );
             }
         }
+
+        // Зареждане на CSS/JS за страницата за плащане на модула (payment)
+        // Проверяваме дали контролерът е от модула dskpayment и е payment контролер
+        $controller = $this->context->controller;
+        $isModulePaymentController = (
+            $controller instanceof ModuleFrontController
+            && isset($controller->module)
+            && $controller->module instanceof Dskpayment
+            && Tools::getValue('module') === $this->name
+            && Tools::getValue('controller') === 'payment'
+        );
+
+        if ($isModulePaymentController) {
+            $paymentJsPath = _PS_MODULE_DIR_ . $this->name . '/js/dskapi_payment.js';
+            $paymentCssPath = _PS_MODULE_DIR_ . $this->name . '/css/dskapi_payment.css';
+
+            // Зареждане на CSS файл с версиониране чрез filemtime
+            if (file_exists($paymentCssPath)) {
+                $cssVersion = filemtime($paymentCssPath);
+                $cssUrl = Tools::getShopDomainSsl(true, true) . __PS_BASE_URI__ . 'modules/' . $this->name . '/css/dskapi_payment.css?v=' . $cssVersion;
+                $this->context->controller->addCSS($cssUrl, 'all');
+            }
+
+            // Зареждане на JavaScript файл с версиониране чрез filemtime
+            if (file_exists($paymentJsPath)) {
+                $jsVersion = filemtime($paymentJsPath);
+                $this->context->controller->addJS(
+                    $this->_path . 'js/dskapi_payment.js?v=' . $jsVersion,
+                    'all'
+                );
+            }
+        }
     }
 
     /**

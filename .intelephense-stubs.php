@@ -434,6 +434,15 @@ class Cart
     {
         return 0.0;
     }
+
+    /**
+     * Get number of products in cart
+     * @return int Number of products
+     */
+    public function nbProducts()
+    {
+        return 0;
+    }
 }
 
 /**
@@ -756,6 +765,15 @@ class Module
     public static function getInstanceByName($module_name)
     {
         return null;
+    }
+
+    /**
+     * Get module path URI
+     * @return string Module path URI
+     */
+    public function getPathUri()
+    {
+        return '';
     }
 }
 
