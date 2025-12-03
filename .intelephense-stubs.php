@@ -333,6 +333,9 @@ class OrderState
  */
 class Language
 {
+    /** @var int */
+    public $id;
+
     /**
      * @param bool $active
      * @return array Array of language arrays with keys like 'id_lang', 'name', etc.
@@ -464,10 +467,111 @@ class HelperForm
  * AdminController is a PrestaShop base class for admin controllers
  * Located in: classes/controller/AdminController.php
  */
-class AdminController
+class AdminController extends Controller
 {
     /** @var string */
     public static $currentIndex;
+
+    /**
+     * Add CSS file
+     * @param string $css_uri
+     * @param string $css_media_type
+     * @return void
+     */
+    public function addCSS($css_uri, $css_media_type = 'all') {}
+
+    /**
+     * Add JavaScript file
+     * @param string $js_uri
+     * @param string|null $css_media_type
+     * @return void
+     */
+    public function addJS($js_uri, $css_media_type = null) {}
+}
+
+/**
+ * AdminOrdersController is the admin controller for orders
+ * Located in: controllers/admin/AdminOrdersController.php
+ */
+class AdminOrdersController extends AdminController {}
+
+/**
+ * ModuleAdminController is the base class for module admin controllers
+ * Located in: classes/controller/ModuleAdminController.php
+ */
+class ModuleAdminController extends AdminController
+{
+    /** @var bool */
+    public $bootstrap;
+    /** @var string */
+    public $table;
+    /** @var string */
+    public $identifier;
+    /** @var string */
+    public $className;
+    /** @var bool */
+    public $lang;
+    /** @var bool */
+    public $explicitSelect;
+    /** @var bool */
+    public $allow_export;
+    /** @var bool */
+    public $deleted;
+    /** @var Context */
+    public $context;
+    /** @var string */
+    public $_select;
+    /** @var string */
+    public $_join;
+    /** @var string */
+    public $_orderBy;
+    /** @var string */
+    public $_orderWay;
+    /** @var array */
+    public $fields_list;
+    /** @var array */
+    public $page_header_toolbar_btn;
+
+    public function __construct() {}
+    public function addRowAction($action) {}
+    public function renderList() { return ''; }
+    public function initPageHeaderToolbar() {}
+
+    /**
+     * Translate a string
+     * @param string $string
+     * @param string|bool $specific
+     * @return string
+     */
+    public function l($string, $specific = false) { return $string; }
+}
+
+/**
+ * Tab is a PrestaShop core class for admin tabs/menu items
+ * Located in: classes/Tab.php
+ */
+class Tab extends ObjectModel
+{
+    /** @var int */
+    public $id_parent;
+    /** @var string */
+    public $class_name;
+    /** @var string */
+    public $module;
+    /** @var bool */
+    public $active;
+    /** @var array */
+    public $name;
+
+    /**
+     * Get tab ID by class name
+     * @param string $class_name
+     * @return int
+     */
+    public static function getIdFromClassName($class_name)
+    {
+        return 0;
+    }
 }
 
 /**
@@ -593,6 +697,18 @@ class Link
      * @return string
      */
     public function getImageLink($name, $id_image, $type = null)
+    {
+        return '';
+    }
+
+    /**
+     * Get admin link for a controller
+     * @param string $controller
+     * @param bool $with_token
+     * @param array $params
+     * @return string
+     */
+    public function getAdminLink($controller, $with_token = true, $params = array())
     {
         return '';
     }
@@ -767,6 +883,17 @@ class Context
     public $controller;
     /** @var Customer */
     public $customer;
+    /** @var Language */
+    public $language;
+
+    /**
+     * Get context instance
+     * @return Context
+     */
+    public static function getContext()
+    {
+        return new self();
+    }
 }
 
 /**

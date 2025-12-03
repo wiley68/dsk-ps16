@@ -1,0 +1,60 @@
+/**
+ * @File: admin_orders.css
+ * @Author: Ilko Ivanov
+ * @Publisher: Avalon Ltd
+ * @Owner: Банка ДСК
+ * @Version: 1.2.0
+ *
+ * Стилове за колоната с DSK статус в списъка с поръчки (Admin)
+ */
+
+/* Badge стилове за DSK статус */
+.badge-info {
+    background-color: #5bc0de;
+    color: #fff;
+}
+
+.badge-warning {
+    background-color: #f0ad4e;
+    color: #fff;
+}
+
+.badge-danger {
+    background-color: #d9534f;
+    color: #fff;
+}
+
+.badge-primary {
+    background-color: #337ab7;
+    color: #fff;
+}
+
+.badge-success {
+    background-color: #5cb85c;
+    color: #fff;
+}
+
+.badge-default {
+    background-color: #777;
+    color: #fff;
+}
+
+/* Основни стилове за badge */
+.badge {
+    display: inline-block;
+    min-width: 10px;
+    padding: 3px 7px;
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-radius: 10px;
+}
+
+/* Колоната за DSK статус */
+td.dsk_payment_status {
+    text-align: center;
+}
+

@@ -85,6 +85,63 @@ class Dskpayment extends PaymentModule
             return false;
         }
 
+        // Install admin tab
+        if (!$this->installAdminTab()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Инсталира Admin Tab за DSK поръчки
+     *
+     * @return bool
+     */
+    private function installAdminTab()
+    {
+        // Проверка дали таба вече съществува
+        $existingTabId = (int) Tab::getIdFromClassName('AdminDskPaymentOrders');
+        if ($existingTabId > 0) {
+            return true;
+        }
+
+        $tab = new Tab();
+        $tab->active = 1;
+        $tab->class_name = 'AdminDskPaymentOrders';
+        $tab->module = $this->name;
+
+        // Намираме ID на родителския таб "Поръчки" (AdminParentOrders)
+        $parentTabId = (int) Tab::getIdFromClassName('AdminParentOrders');
+        if ($parentTabId <= 0) {
+            // Fallback: използваме AdminOrders
+            $parentTabId = (int) Tab::getIdFromClassName('AdminOrders');
+        }
+        $tab->id_parent = $parentTabId > 0 ? $parentTabId : 0;
+
+        // Задаваме име на всички езици
+        $languages = Language::getLanguages(false);
+        foreach ($languages as $language) {
+            $tab->name[$language['id_lang']] = 'DSK Поръчки';
+        }
+
+        return $tab->add();
+    }
+
+    /**
+     * Деинсталира Admin Tab
+     *
+     * @return bool
+     */
+    private function uninstallAdminTab()
+    {
+        $tabId = (int) Tab::getIdFromClassName('AdminDskPaymentOrders');
+        if ($tabId > 0) {
+            $tab = new Tab($tabId);
+            if (Validate::isLoadedObject($tab)) {
+                return $tab->delete();
+            }
+        }
         return true;
     }
 
@@ -99,7 +156,8 @@ class Dskpayment extends PaymentModule
             !Configuration::deleteByName('dskapi_reklama') ||
             !Configuration::deleteByName('dskapi_gap') ||
             !$this->uninstallDb() ||
-            !$this->uninstallOrderStates()
+            !$this->uninstallOrderStates() ||
+            !$this->uninstallAdminTab()
         )
             return false;
         return true;
