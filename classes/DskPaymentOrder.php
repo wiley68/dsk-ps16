@@ -36,16 +36,16 @@ class DskPaymentOrder extends ObjectModel
     /**
      * @see ObjectModel::$definition
      */
-    public static $definition = [
+    public static $definition = array(
         'table' => 'dskpayment_orders',
         'primary' => 'id',
-        'fields' => [
-            'order_id' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
-            'order_status' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true, 'size' => 4],
-            'created_at' => ['type' => self::TYPE_DATE, 'validate' => 'isDate', 'required' => true],
-            'updated_at' => ['type' => self::TYPE_DATE, 'validate' => 'isDate', 'required' => false],
-        ],
-    ];
+        'fields' => array(
+            'order_id' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true),
+            'order_status' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true, 'size' => 4),
+            'created_at' => array('type' => self::TYPE_DATE, 'validate' => 'isDate', 'required' => true),
+            'updated_at' => array('type' => self::TYPE_DATE, 'validate' => 'isDate', 'required' => false),
+        ),
+    );
 
     /**
      * Create or update a DSK payment order record
@@ -55,8 +55,11 @@ class DskPaymentOrder extends ObjectModel
      * @param int $orderStatus Order status (0-8)
      * @return DskPaymentOrder|false Created/updated object or false on failure
      */
-    public static function create(int $orderId, int $orderStatus = 0)
+    public static function create($orderId, $orderStatus = 0)
     {
+        $orderId = (int) $orderId;
+        $orderStatus = (int) $orderStatus;
+
         if ($orderStatus < 0 || $orderStatus > 8) {
             return false;
         }
@@ -66,7 +69,7 @@ class DskPaymentOrder extends ObjectModel
 
         if ($existingOrder && Validate::isLoadedObject($existingOrder)) {
             // Update existing order
-            $existingOrder->order_status = (int) $orderStatus;
+            $existingOrder->order_status = $orderStatus;
             $existingOrder->updated_at = date('Y-m-d H:i:s');
 
             if ($existingOrder->update()) {
@@ -78,8 +81,8 @@ class DskPaymentOrder extends ObjectModel
 
         // Create new order
         $dskOrder = new self();
-        $dskOrder->order_id = (int) $orderId;
-        $dskOrder->order_status = (int) $orderStatus;
+        $dskOrder->order_id = $orderId;
+        $dskOrder->order_status = $orderStatus;
         $dskOrder->created_at = date('Y-m-d H:i:s');
         $dskOrder->updated_at = null;
 
@@ -97,18 +100,21 @@ class DskPaymentOrder extends ObjectModel
      * @param int $orderStatus New order status (0-8)
      * @return bool True on success, false otherwise
      */
-    public static function updateStatus(int $orderId, int $orderStatus): bool
+    public static function updateStatus($orderId, $orderStatus)
     {
+        $orderId = (int) $orderId;
+        $orderStatus = (int) $orderStatus;
+
         if ($orderStatus < 0 || $orderStatus > 8) {
             return false;
         }
 
         $dskOrder = self::getByOrderId($orderId);
-        if (!Validate::isLoadedObject($dskOrder)) {
+        if (!$dskOrder || !Validate::isLoadedObject($dskOrder)) {
             return false;
         }
 
-        $dskOrder->order_status = (int) $orderStatus;
+        $dskOrder->order_status = $orderStatus;
         $dskOrder->updated_at = date('Y-m-d H:i:s');
 
         return $dskOrder->update();
@@ -120,12 +126,14 @@ class DskPaymentOrder extends ObjectModel
      * @param int $orderId PrestaShop order ID
      * @return DskPaymentOrder|false Order object or false if not found
      */
-    public static function getByOrderId(int $orderId)
+    public static function getByOrderId($orderId)
     {
+        $orderId = (int) $orderId;
+
         $sql = new DbQuery();
         $sql->select('id');
         $sql->from('dskpayment_orders');
-        $sql->where('order_id = ' . (int) $orderId);
+        $sql->where('order_id = ' . $orderId);
 
         $id = Db::getInstance()->getValue($sql);
 
@@ -163,10 +171,12 @@ class DskPaymentOrder extends ObjectModel
      * @param int $orderId PrestaShop order ID
      * @return bool True on success, false otherwise
      */
-    public static function deleteByOrderId(int $orderId): bool
+    public static function deleteByOrderId($orderId)
     {
+        $orderId = (int) $orderId;
+
         $dskOrder = self::getByOrderId($orderId);
-        if (!Validate::isLoadedObject($dskOrder)) {
+        if (!$dskOrder || !Validate::isLoadedObject($dskOrder)) {
             return false;
         }
 
@@ -179,10 +189,12 @@ class DskPaymentOrder extends ObjectModel
      * @param int $id DSK payment order ID
      * @return bool True on success, false otherwise
      */
-    public static function deleteById(int $id): bool
+    public static function deleteById($id)
     {
+        $id = (int) $id;
+
         $dskOrder = self::getById($id);
-        if (!Validate::isLoadedObject($dskOrder)) {
+        if (!$dskOrder || !Validate::isLoadedObject($dskOrder)) {
             return false;
         }
 

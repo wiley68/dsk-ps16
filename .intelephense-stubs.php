@@ -419,6 +419,16 @@ class Tools
      * @return void
      */
     public static function redirect($url, $base_uri = null, $link = null, $headers = null) {}
+
+    /**
+     * JSON encode
+     * @param mixed $data
+     * @return string
+     */
+    public static function jsonEncode($data)
+    {
+        return '';
+    }
 }
 
 /**
@@ -797,6 +807,8 @@ class FrontController extends Controller
     public $ssl;
     /** @var bool */
     public $display_column_left;
+    /** @var bool */
+    public $ajax;
     /** @var Module|PaymentModule */
     public $module;
 
@@ -828,6 +840,18 @@ class ModuleFrontController extends FrontController
 {
     /** @var PaymentModule|Module */
     public $module;
+
+    /**
+     * Initialize header
+     * @return void
+     */
+    public function initHeader() {}
+
+    /**
+     * Display ajax content
+     * @return void
+     */
+    public function displayAjax() {}
 }
 
 /**
