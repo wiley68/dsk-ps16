@@ -18,6 +18,8 @@ defined('DSKAPI_MAIL') or define('DSKAPI_MAIL', 'home@avalonbg.com');
 defined('_DB_PREFIX_') or define('_DB_PREFIX_', 'ps_');
 defined('_MYSQL_ENGINE_') or define('_MYSQL_ENGINE_', 'InnoDB');
 
+require_once __DIR__ . '/classes/DskPaymentOrder.php';
+
 /**
  * Class Dskpayment
  * @extends PaymentModule

@@ -33,6 +33,67 @@ if (!function_exists('pSQL')) {
 }
 
 /**
+ * ObjectModel is the base class for all PrestaShop models
+ * Located in: classes/ObjectModel.php
+ */
+abstract class ObjectModel
+{
+    const TYPE_INT = 1;
+    const TYPE_BOOL = 2;
+    const TYPE_STRING = 3;
+    const TYPE_FLOAT = 4;
+    const TYPE_DATE = 5;
+    const TYPE_HTML = 6;
+    const TYPE_NOTHING = 7;
+    const TYPE_SQL = 8;
+
+    /** @var int */
+    public $id;
+
+    /** @var array */
+    public static $definition = array();
+
+    /**
+     * @param int|null $id
+     * @param int|null $id_lang
+     * @param int|null $id_shop
+     */
+    public function __construct($id = null, $id_lang = null, $id_shop = null) {}
+
+    /**
+     * @return bool
+     */
+    public function add($auto_date = true, $null_values = false)
+    {
+        return false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function update($null_values = false)
+    {
+        return false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function delete()
+    {
+        return false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function save($null_values = false, $auto_date = true)
+    {
+        return false;
+    }
+}
+
+/**
  * Shop is a PrestaShop core class
  * Located in: classes/shop/Shop.php
  */
@@ -188,6 +249,24 @@ class Validate
     {
         return false;
     }
+
+    /**
+     * @param mixed $value
+     * @return bool
+     */
+    public static function isUnsignedInt($value)
+    {
+        return false;
+    }
+
+    /**
+     * @param mixed $value
+     * @return bool
+     */
+    public static function isInt($value)
+    {
+        return false;
+    }
 }
 
 /**
@@ -327,6 +406,16 @@ class Tools
     {
         return '';
     }
+
+    /**
+     * Redirect to another page
+     * @param string $url
+     * @param string $base_uri
+     * @param Link|null $link
+     * @param string|array $headers
+     * @return void
+     */
+    public static function redirect($url, $base_uri = null, $link = null, $headers = null) {}
 }
 
 /**
@@ -403,6 +492,8 @@ class Cart
 
     /** @var int */
     public $id;
+    /** @var int */
+    public $id_customer;
     /** @var int */
     public $id_currency;
     /** @var int */
@@ -493,6 +584,63 @@ class Link
     {
         return '';
     }
+
+    /**
+     * Get image link
+     * @param string $name
+     * @param int $id_image
+     * @param string $type
+     * @return string
+     */
+    public function getImageLink($name, $id_image, $type = null)
+    {
+        return '';
+    }
+}
+
+/**
+ * Image is a PrestaShop core class for product images
+ * Located in: classes/Image.php
+ */
+class Image
+{
+    /** @var int */
+    public $id;
+    /** @var int */
+    public $id_image;
+    /** @var int */
+    public $id_product;
+    /** @var int */
+    public $position;
+    /** @var bool */
+    public $cover;
+
+    /**
+     * @param int|null $id
+     */
+    public function __construct($id = null) {}
+
+    /**
+     * Get images by product id
+     * @param int $id_product
+     * @param int|null $id_lang
+     * @return array
+     */
+    public static function getImages($id_product, $id_lang = null)
+    {
+        return array();
+    }
+
+    /**
+     * Get cover image for product
+     * @param int $id_product
+     * @param Context|null $context
+     * @return array|false
+     */
+    public static function getCover($id_product, $context = null)
+    {
+        return array();
+    }
 }
 
 /**
@@ -533,7 +681,7 @@ class FrontController extends Controller
     public $ssl;
     /** @var bool */
     public $display_column_left;
-    /** @var Module */
+    /** @var Module|PaymentModule */
     public $module;
 
     /**
@@ -548,13 +696,23 @@ class FrontController extends Controller
      * @return void
      */
     public function setTemplate($template) {}
+
+    /**
+     * Post process hook
+     * @return void
+     */
+    public function postProcess() {}
 }
 
 /**
  * ModuleFrontController is a PrestaShop base class for module front controllers
  * Located in: classes/controller/ModuleFrontController.php
  */
-class ModuleFrontController extends FrontController {}
+class ModuleFrontController extends FrontController
+{
+    /** @var PaymentModule|Module */
+    public $module;
+}
 
 /**
  * Customer is a PrestaShop core class for customers
@@ -572,6 +730,13 @@ class Customer
     public $email;
     /** @var int */
     public $id_lang;
+    /** @var string */
+    public $secure_key;
+
+    /**
+     * @param int|null $id
+     */
+    public function __construct($id = null) {}
 
     /**
      * Get customer addresses
@@ -775,6 +940,15 @@ class Module
     {
         return '';
     }
+
+    /**
+     * Get payment modules
+     * @return array Array of payment modules
+     */
+    public static function getPaymentModules()
+    {
+        return array();
+    }
 }
 
 /**
@@ -783,6 +957,9 @@ class Module
  */
 abstract class PaymentModule extends Module
 {
+    /** @var int */
+    public $currentOrder;
+
     /**
      * @return bool
      */
