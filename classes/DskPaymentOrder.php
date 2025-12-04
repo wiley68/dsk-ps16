@@ -16,24 +16,76 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+/**
+ * DSK Payment Order Model
+ *
+ * This class extends PrestaShop's ObjectModel to manage DSK Bank payment order records.
+ * It tracks the status of credit orders submitted to DSK Bank and provides methods
+ * for creating, updating, retrieving, and deleting payment order records.
+ *
+ * Status codes (0-8) represent different stages of the credit application process
+ * as defined by DSK Bank's API.
+ *
+ * @package DskPayment
+ * @since 1.2.0
+ */
 class DskPaymentOrder extends ObjectModel
 {
-    /** @var int */
+    /**
+     * Primary key - auto-increment ID
+     *
+     * @var int
+     */
     public $id;
 
-    /** @var int Order ID from PrestaShop orders table */
+    /**
+     * PrestaShop order ID reference
+     *
+     * Links this DSK payment record to the corresponding PrestaShop order.
+     *
+     * @var int
+     */
     public $order_id;
 
-    /** @var int Order status (0-8) */
+    /**
+     * DSK Bank order status code
+     *
+     * Possible values:
+     * - 0: Pending / Initial state
+     * - 1: Submitted to bank
+     * - 2: Under review
+     * - 3: Approved
+     * - 4: Rejected
+     * - 5: Cancelled by customer
+     * - 6: Documents required
+     * - 7: Completed / Finalized
+     * - 8: Error / Failed
+     *
+     * @var int
+     */
     public $order_status;
 
-    /** @var string Creation date */
+    /**
+     * Record creation timestamp
+     *
+     * @var string DateTime in 'Y-m-d H:i:s' format
+     */
     public $created_at;
 
-    /** @var string|null Update date */
+    /**
+     * Record last update timestamp
+     *
+     * @var string|null DateTime in 'Y-m-d H:i:s' format, null if never updated
+     */
     public $updated_at;
 
     /**
+     * ObjectModel definition for database mapping
+     *
+     * Defines the table name, primary key, and field specifications
+     * for PrestaShop's ORM system.
+     *
+     * @var array
      * @see ObjectModel::$definition
      */
     public static $definition = array(
@@ -49,17 +101,21 @@ class DskPaymentOrder extends ObjectModel
 
     /**
      * Create or update a DSK payment order record
-     * If order with this order_id exists, it will be updated, otherwise created
      *
-     * @param int $orderId PrestaShop order ID
-     * @param int $orderStatus Order status (0-8)
-     * @return DskPaymentOrder|false Created/updated object or false on failure
+     * If an order with the given order_id already exists, it will be updated
+     * with the new status. Otherwise, a new record will be created.
+     *
+     * @param int $orderId PrestaShop order ID to associate with this record
+     * @param int $orderStatus DSK Bank order status code (0-8)
+     *
+     * @return DskPaymentOrder|false The created/updated object on success, false on failure
      */
     public static function create($orderId, $orderStatus = 0)
     {
         $orderId = (int) $orderId;
         $orderStatus = (int) $orderStatus;
 
+        // Validate status range
         if ($orderStatus < 0 || $orderStatus > 8) {
             return false;
         }
@@ -79,7 +135,7 @@ class DskPaymentOrder extends ObjectModel
             return false;
         }
 
-        // Create new order
+        // Create new order record
         $dskOrder = new self();
         $dskOrder->order_id = $orderId;
         $dskOrder->order_status = $orderStatus;
@@ -94,26 +150,33 @@ class DskPaymentOrder extends ObjectModel
     }
 
     /**
-     * Update order status
+     * Update the status of an existing DSK payment order
+     *
+     * Finds the record by PrestaShop order ID and updates its status.
+     * The updated_at timestamp is automatically set to the current time.
      *
      * @param int $orderId PrestaShop order ID
-     * @param int $orderStatus New order status (0-8)
-     * @return bool True on success, false otherwise
+     * @param int $orderStatus New DSK Bank order status code (0-8)
+     *
+     * @return bool True on successful update, false if order not found or update failed
      */
     public static function updateStatus($orderId, $orderStatus)
     {
         $orderId = (int) $orderId;
         $orderStatus = (int) $orderStatus;
 
+        // Validate status range
         if ($orderStatus < 0 || $orderStatus > 8) {
             return false;
         }
 
+        // Find existing order
         $dskOrder = self::getByOrderId($orderId);
         if (!$dskOrder || !Validate::isLoadedObject($dskOrder)) {
             return false;
         }
 
+        // Update status and timestamp
         $dskOrder->order_status = $orderStatus;
         $dskOrder->updated_at = date('Y-m-d H:i:s');
 
@@ -121,10 +184,14 @@ class DskPaymentOrder extends ObjectModel
     }
 
     /**
-     * Get order by PrestaShop order ID
+     * Retrieve a DSK payment order by PrestaShop order ID
      *
-     * @param int $orderId PrestaShop order ID
-     * @return DskPaymentOrder|false Order object or false if not found
+     * Performs a database lookup to find the DSK payment record
+     * associated with the given PrestaShop order.
+     *
+     * @param int $orderId PrestaShop order ID to search for
+     *
+     * @return DskPaymentOrder|false The order object if found, false otherwise
      */
     public static function getByOrderId($orderId)
     {
@@ -145,11 +212,12 @@ class DskPaymentOrder extends ObjectModel
     }
 
     /**
-     * Get order by ID
+     * Retrieve a DSK payment order by its primary key ID
      *
-     * @param int $id DSK payment order ID
-     * @param int|null $idLang Language ID
-     * @return DskPaymentOrder|false Order object or false if not found
+     * @param int $id DSK payment order primary key
+     * @param int|null $idLang Language ID (unused, kept for interface compatibility)
+     *
+     * @return DskPaymentOrder|false The order object if found and valid, false otherwise
      */
     public static function getById($id, $idLang = null)
     {
@@ -166,10 +234,14 @@ class DskPaymentOrder extends ObjectModel
     }
 
     /**
-     * Delete order by PrestaShop order ID
+     * Delete a DSK payment order by PrestaShop order ID
+     *
+     * Finds and removes the DSK payment record associated with
+     * the given PrestaShop order.
      *
      * @param int $orderId PrestaShop order ID
-     * @return bool True on success, false otherwise
+     *
+     * @return bool True on successful deletion, false if not found or deletion failed
      */
     public static function deleteByOrderId($orderId)
     {
@@ -184,10 +256,11 @@ class DskPaymentOrder extends ObjectModel
     }
 
     /**
-     * Delete order by ID
+     * Delete a DSK payment order by its primary key ID
      *
-     * @param int $id DSK payment order ID
-     * @return bool True on success, false otherwise
+     * @param int $id DSK payment order primary key
+     *
+     * @return bool True on successful deletion, false if not found or deletion failed
      */
     public static function deleteById($id)
     {

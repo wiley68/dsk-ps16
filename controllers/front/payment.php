@@ -1,6 +1,13 @@
 <?php
 
 /**
+ * DSK Payment Front Controller
+ *
+ * This controller handles the payment execution page for DSK Bank credit purchases.
+ * It validates the cart total against DSK Bank's minimum and maximum limits,
+ * retrieves customer data, and prepares all necessary variables for the
+ * payment confirmation template.
+ *
  * @File: payment.php
  * @Author: Ilko Ivanov
  * @Author e-mail: ilko.iv@gmail.com
@@ -8,16 +15,37 @@
  * @Publisher e-mail: home@avalonbg.com
  * @Owner: Банка ДСК
  * @Version: 1.2.0
- */
-/**
  * @since 1.5.0
  */
 class DskpaymentPaymentModuleFrontController extends ModuleFrontController
 {
+    /**
+     * Force SSL connection for security
+     *
+     * @var bool
+     */
     public $ssl = true;
+
+    /**
+     * Hide left column for cleaner payment page layout
+     *
+     * @var bool
+     */
     public $display_column_left = false;
 
     /**
+     * Initialize page content and prepare payment data
+     *
+     * This method performs the following operations:
+     * - Validates that the DSK payment module is active
+     * - Checks cart total against DSK Bank's min/max limits
+     * - Retrieves customer and address information
+     * - Handles currency conversion (BGN/EUR)
+     * - Prepares data for the interest rates popup
+     * - Assigns all variables to Smarty template
+     *
+     * @return void|string Returns empty string if validation fails
+     *
      * @see FrontController::initContent()
      */
     public function initContent()
@@ -27,36 +55,44 @@ class DskpaymentPaymentModuleFrontController extends ModuleFrontController
         /** @var Cart $cart */
         $cart = $this->context->cart;
         $dskapi_price = (float) $cart->getOrderTotal(true);
-        $dskapi_cid = (string)Configuration::get('dskapi_cid');
+        $dskapi_cid = (string) Configuration::get('dskapi_cid');
         $module = Module::getInstanceByName('dskpayment');
-        $dskapi_status = (int)Configuration::get('dskapi_status');
+        $dskapi_status = (int) Configuration::get('dskapi_status');
 
+        // Check if module is enabled
         if ($dskapi_status == 0) {
             return '';
         }
 
+        // Fetch min/max limits from DSK API
         $paramsdskapi = $this->makeApiRequest('/function/getminmax.php?cid=' . $dskapi_cid, 6);
         if ($paramsdskapi === null) {
             return '';
         }
 
+        // Parse API response for price limits
         $dskapi_minstojnost = (float) $paramsdskapi['dsk_minstojnost'];
         $dskapi_maxstojnost = (float) $paramsdskapi['dsk_maxstojnost'];
         $dskapi_min_000 = (float) $paramsdskapi['dsk_min_000'];
         $dskapi_status_cp = $paramsdskapi['dsk_status'];
 
+        // Adjust minimum for 0% interest rate with <= 6 months
         $dskapi_purcent = (float) $paramsdskapi['dsk_purcent'];
         $dskapi_vnoski_default = (int) $paramsdskapi['dsk_vnoski_default'];
         if (($dskapi_purcent == 0) && ($dskapi_vnoski_default <= 6)) {
             $dskapi_minstojnost = $dskapi_min_000;
         }
 
+        // Get customer personal data
         $dskapi_firstname = isset($this->context->customer->firstname) ? trim($this->context->customer->firstname, " ") : '';
         $dskapi_lastname = isset($this->context->customer->lastname) ? trim($this->context->customer->lastname, " ") : '';
 
+        // Get customer addresses
         $dskapi_addresses = $this->context->customer->getAddresses($this->context->customer->id_lang);
         $dskapi_address_delivery_id = isset($this->context->cart->id_address_delivery) ? $this->context->cart->id_address_delivery : '';
         $dskapi_address_invoice_id = isset($this->context->cart->id_address_invoice) ? $this->context->cart->id_address_invoice : '';
+
+        // Find shipping and billing addresses
         foreach ($dskapi_addresses as $dskapi_address) {
             if ($dskapi_address['id_address'] == $dskapi_address_delivery_id) {
                 $dskapi_shipping_addresses = $dskapi_address;
@@ -65,6 +101,8 @@ class DskpaymentPaymentModuleFrontController extends ModuleFrontController
                 $dskapi_billing_addresses = $dskapi_address;
             }
         }
+
+        // Extract address details with fallback to empty strings
         $dskapi_phone = isset($dskapi_shipping_addresses['phone']) ? $dskapi_shipping_addresses['phone'] : '';
         $dskapi_email = isset($this->context->customer->email) ? $this->context->customer->email : '';
         $dskapi_address_address1 = isset($dskapi_shipping_addresses['address1']) ? $dskapi_shipping_addresses['address1'] : '';
@@ -76,26 +114,32 @@ class DskpaymentPaymentModuleFrontController extends ModuleFrontController
         $dskapi_address1city = $dskapi_city;
         $dskapi_postcode = isset($dskapi_shipping_addresses['postcode']) ? $dskapi_shipping_addresses['postcode'] : '';
 
+        // Handle currency conversion settings
         $dskapi_eur = 0;
         $dskapi_currency_code = $this->context->currency->iso_code;
 
+        // Fetch EUR conversion settings from API
         $paramsdskapieur = $this->makeApiRequest('/function/geteur.php?cid=' . urlencode($dskapi_cid));
         if ($paramsdskapieur === null) {
             return '';
         }
 
+        // Apply currency conversion based on settings
         $dskapi_sign = 'лв.';
-        $dskapi_eur = (int)$paramsdskapieur['dsk_eur'];
+        $dskapi_eur = (int) $paramsdskapieur['dsk_eur'];
         switch ($dskapi_eur) {
             case 0:
+                // No conversion
                 break;
             case 1:
+                // Convert to BGN
                 $dskapi_sign = 'лв.';
                 if ($dskapi_currency_code == "EUR") {
                     $dskapi_price = (float) number_format($dskapi_price * 1.95583, 2, ".", "");
                 }
                 break;
             case 2:
+                // Convert to EUR
                 $dskapi_sign = "евро";
                 if ($dskapi_currency_code == "BGN") {
                     $dskapi_price = (float) number_format($dskapi_price / 1.95583, 2, ".", "");
@@ -103,6 +147,7 @@ class DskpaymentPaymentModuleFrontController extends ModuleFrontController
                 break;
         }
 
+        // Validate cart total is within allowed range
         if (
             ($dskapi_status_cp == 0) ||
             ($dskapi_price < $dskapi_minstojnost) ||
@@ -111,25 +156,27 @@ class DskpaymentPaymentModuleFrontController extends ModuleFrontController
             return '';
         }
 
-        // Получаване на данни за попъпа с лихвени схеми
+        // Fetch data for interest rates popup
         $dskapi_product_id = $this->resolveCartProductId();
         $apiUrl = '/function/getproduct.php?cid=' . urlencode($dskapi_cid)
             . '&price=' . urlencode((string) $dskapi_price)
             . '&product_id=' . urlencode((string) $dskapi_product_id);
         $paramsdskapi_popup = $this->makeApiRequest($apiUrl);
 
-        // Подготовка на данни за попъпа
+        // Initialize popup data with defaults
         $dskapi_popup_enabled = false;
         $dskapi_vnoski_visible_arr = [];
         $dskapi_vnoski = 0;
         $dskapi_vnoska = 0;
 
+        // Parse popup data if available
         if ($paramsdskapi_popup !== null && isset($paramsdskapi_popup['dsk_options'])) {
             $dskapi_popup_enabled = true;
             $dskapi_vnoski_visible = (int) (isset($paramsdskapi_popup['dsk_vnoski_visible']) ? $paramsdskapi_popup['dsk_vnoski_visible'] : 0);
             $dskapi_vnoski = (int) (isset($paramsdskapi_popup['dsk_vnoski_default']) ? $paramsdskapi_popup['dsk_vnoski_default'] : 0);
             $dskapi_vnoska = (float) (isset($paramsdskapi_popup['dsk_vnoska']) ? $paramsdskapi_popup['dsk_vnoska'] : 0);
 
+            // Build array of visible installment options using bitmask
             for ($vnoska = 3; $vnoska <= 48; $vnoska++) {
                 $bitPosition = $vnoska - 3;
                 $bitMask = 1 << $bitPosition;
@@ -137,11 +184,12 @@ class DskpaymentPaymentModuleFrontController extends ModuleFrontController
             }
         }
 
-        // Определяне на префикси за мобилна/десктоп версия
+        // Determine CSS class prefixes for mobile/desktop
         $dskapi_is_mobile = $this->isMobileDevice();
         $prefix = $dskapi_is_mobile ? 'dskapim' : 'dskapi';
         $imgPrefix = $dskapi_is_mobile ? 'dskm' : 'dsk';
 
+        // Assign all variables to Smarty template
         $this->context->smarty->assign(array(
             'dskapi_nbProducts' => $cart->nbProducts(),
             'dskapi_this_path_bw' => $this->module->getPathUri(),
@@ -157,7 +205,7 @@ class DskpaymentPaymentModuleFrontController extends ModuleFrontController
             'dskapi_postcode' => $dskapi_postcode,
             'DSKAPI_VERSION' => $module->version,
             'dskapi_eur' => $dskapi_eur,
-            // Данни за попъпа с лихвени схеми
+            // Interest rates popup data
             'dskapi_popup_enabled' => $dskapi_popup_enabled,
             'dskapi_cid' => $dskapi_cid,
             'dskapi_product_id' => $dskapi_product_id,
@@ -186,9 +234,13 @@ class DskpaymentPaymentModuleFrontController extends ModuleFrontController
     }
 
     /**
-     * Определя product ID за количката
+     * Resolve product ID from the cart
      *
-     * @return int
+     * Determines the product identifier to send to the DSK API.
+     * If the cart contains exactly one unique product, its ID is returned.
+     * If multiple products exist, returns 0 (generic cart calculation).
+     *
+     * @return int Product ID or 0 for mixed cart
      */
     private function resolveCartProductId()
     {
@@ -201,12 +253,14 @@ class DskpaymentPaymentModuleFrontController extends ModuleFrontController
             return 0;
         }
 
+        // Collect unique product IDs
         $uniqueIds = [];
         foreach ($products as $product) {
             $productId = (int) ($product['id_product'] ?? 0);
             if ($productId > 0) {
                 $uniqueIds[$productId] = true;
             }
+            // Return 0 if multiple different products
             if (count($uniqueIds) > 1) {
                 return 0;
             }
@@ -219,9 +273,13 @@ class DskpaymentPaymentModuleFrontController extends ModuleFrontController
     }
 
     /**
-     * Проверява дали устройството е мобилно
+     * Detect if the current visitor uses a mobile device
      *
-     * @return bool
+     * Uses User-Agent string analysis to determine if the request
+     * comes from a mobile device. This affects the CSS class prefixes
+     * used in the payment template for responsive styling.
+     *
+     * @return bool True if mobile device detected, false otherwise
      */
     private function isMobileDevice()
     {
@@ -237,19 +295,16 @@ class DskpaymentPaymentModuleFrontController extends ModuleFrontController
     }
 
     /**
-     * Извършва API заявка и връща декодирания JSON отговор
+     * Execute an HTTP request to the DSK Bank API
      *
-     * @param string $endpoint API endpoint (без базовия URL)
-     * @param int $timeout Timeout в секунди
-     * @return array|null Декодираният JSON отговор или null при грешка
-     */
-    /**
-     * Executes an HTTP request to the DSK API and returns the decoded response.
+     * Sends a GET request to the specified DSK API endpoint and returns
+     * the decoded JSON response. Uses cURL with SSL verification disabled
+     * for compatibility with various server configurations.
      *
-     * @param string $endpoint Relative API endpoint path
-     * @param int $timeout Request timeout in seconds
+     * @param string $endpoint Relative API endpoint path (e.g., '/function/getminmax.php?cid=xxx')
+     * @param int $timeout Request timeout in seconds (default: 5)
      *
-     * @return array|null
+     * @return array|null Decoded JSON response as associative array, or null on failure
      */
     private function makeApiRequest($endpoint, $timeout = 5)
     {
@@ -265,10 +320,12 @@ class DskpaymentPaymentModuleFrontController extends ModuleFrontController
         $curlError = curl_error($ch);
         curl_close($ch);
 
+        // Validate response
         if ($response === false || $httpCode !== 200 || !empty($curlError)) {
             return null;
         }
 
+        // Decode JSON response
         $decoded = json_decode($response, true);
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
             return null;

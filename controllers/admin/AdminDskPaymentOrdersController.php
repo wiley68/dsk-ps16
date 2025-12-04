@@ -1,35 +1,47 @@
 <?php
+
 /**
+ * Admin Controller for DSK Payment Orders Management
+ *
+ * This controller provides an administrative interface for viewing and managing
+ * DSK Bank credit payment orders. It displays a list of all orders processed
+ * through the DSK payment module with their current status.
+ *
  * @File: AdminDskPaymentOrdersController.php
  * @Author: Ilko Ivanov
  * @Publisher: Avalon Ltd
  * @Owner: Банка ДСК
  * @Version: 1.2.0
  *
- * Admin контролер за показване на DSK поръчки
+ * @property bool $bootstrap Enable Bootstrap styling
+ * @property string $table Database table name
+ * @property string $identifier Primary key field name
+ * @property string $className Associated model class name
+ * @property bool $lang Multi-language support flag
+ * @property bool $explicitSelect Use explicit SELECT in queries
+ * @property bool $allow_export Allow data export functionality
+ * @property bool $deleted Show deleted records flag
+ * @property Context $context PrestaShop context object
+ * @property string $_select Additional SELECT fields for query
+ * @property string $_join Additional JOIN clauses for query
+ * @property string $_orderBy Default ORDER BY field
+ * @property string $_orderWay Default sort direction (ASC/DESC)
+ * @property array $fields_list Column definitions for the list view
+ * @property array $page_header_toolbar_btn Toolbar buttons configuration
  *
- * @property bool $bootstrap
- * @property string $table
- * @property string $identifier
- * @property string $className
- * @property bool $lang
- * @property bool $explicitSelect
- * @property bool $allow_export
- * @property bool $deleted
- * @property Context $context
- * @property string $_select
- * @property string $_join
- * @property string $_orderBy
- * @property string $_orderWay
- * @property array $fields_list
- * @property array $page_header_toolbar_btn
- * @method void addRowAction(string $action)
- * @method string renderList()
- * @method void initPageHeaderToolbar()
- * @method string l(string $string, string|bool $specific = false)
+ * @method void addRowAction(string $action) Add row action button
+ * @method string renderList() Render the list view
+ * @method void initPageHeaderToolbar() Initialize page header toolbar
+ * @method string l(string $string, string|bool $specific = false) Translate string
  */
 class AdminDskPaymentOrdersController extends ModuleAdminController
 {
+    /**
+     * Controller constructor
+     *
+     * Initializes the admin controller with table configuration, column definitions,
+     * and SQL query settings for displaying DSK payment orders.
+     */
     public function __construct()
     {
         $this->bootstrap = true;
@@ -43,6 +55,7 @@ class AdminDskPaymentOrdersController extends ModuleAdminController
         $this->deleted = false;
         $this->context = Context::getContext();
 
+        // Additional fields from related tables
         $this->_select = '
             o.id_order,
             o.reference,
@@ -52,15 +65,18 @@ class AdminDskPaymentOrdersController extends ModuleAdminController
             osl.name as order_status_name
         ';
 
+        // Join with orders, customers and order states
         $this->_join = '
             INNER JOIN `' . _DB_PREFIX_ . 'orders` o ON (o.id_order = a.order_id)
             LEFT JOIN `' . _DB_PREFIX_ . 'customer` c ON (c.id_customer = o.id_customer)
             LEFT JOIN `' . _DB_PREFIX_ . 'order_state_lang` osl ON (osl.id_order_state = o.current_state AND osl.id_lang = ' . (int) $this->context->language->id . ')
         ';
 
+        // Default sorting by ID descending (newest first)
         $this->_orderBy = 'a.id';
         $this->_orderWay = 'DESC';
 
+        // Column definitions for the list view
         $this->fields_list = array(
             'id' => array(
                 'title' => $this->l('ID'),
@@ -113,9 +129,23 @@ class AdminDskPaymentOrdersController extends ModuleAdminController
     }
 
     /**
-     * Връща списък със статуси за филтриране
+     * Get list of DSK Bank order statuses for filtering
      *
-     * @return array
+     * Returns an associative array mapping status codes (0-8) to their
+     * human-readable labels in Bulgarian.
+     *
+     * Status codes:
+     * - 0: Application created
+     * - 1: Financial scheme selected
+     * - 2: Application completed
+     * - 3: Sent to bank
+     * - 4: Contact unsuccessful
+     * - 5: Cancelled
+     * - 6: Rejected
+     * - 7: Contract signed
+     * - 8: Credit utilized
+     *
+     * @return array Associative array of status code => label
      */
     private function getDskStatusList()
     {
@@ -133,11 +163,15 @@ class AdminDskPaymentOrdersController extends ModuleAdminController
     }
 
     /**
-     * Callback за показване на DSK статус като badge
+     * Callback method to render DSK status as a colored badge
      *
-     * @param int $status
-     * @param array $row
-     * @return string
+     * This method is called by PrestaShop's list rendering system
+     * to format the order_status column with a Bootstrap label badge.
+     *
+     * @param int $status The DSK order status code (0-8)
+     * @param array $row The full row data from the database query
+     *
+     * @return string HTML string containing the styled badge element
      */
     public function getDskStatusBadge($status, $row)
     {
@@ -150,10 +184,19 @@ class AdminDskPaymentOrdersController extends ModuleAdminController
     }
 
     /**
-     * Връща CSS клас за label според статуса
+     * Get Bootstrap label CSS class based on status code
      *
-     * @param int $status
-     * @return string
+     * Maps DSK order status codes to appropriate Bootstrap label classes
+     * for visual distinction:
+     * - Info (blue): Initial stages (0, 1, 2)
+     * - Warning (orange): Sent to bank (3)
+     * - Danger (red): Failed states (4, 5, 6)
+     * - Primary (dark blue): Contract signed (7)
+     * - Success (green): Credit utilized (8)
+     *
+     * @param int $status The DSK order status code (0-8)
+     *
+     * @return string Bootstrap label class name
      */
     private function getDskStatusBadgeClass($status)
     {
@@ -178,16 +221,21 @@ class AdminDskPaymentOrdersController extends ModuleAdminController
     }
 
     /**
-     * Действие при клик на "Виж"
+     * Generate the "View" action link for a row
      *
-     * @param string $token
-     * @param int $id
-     * @param string|null $name
-     * @return string
+     * Creates a button that links to the full PrestaShop order details page.
+     * This allows administrators to quickly navigate to the complete order
+     * information from the DSK orders list.
+     *
+     * @param string $token Security token for admin links
+     * @param int $id The DSK payment order record ID
+     * @param string|null $name Optional name parameter (unused)
+     *
+     * @return string HTML string containing the view button, or empty string if invalid
      */
     public function displayViewLink($token, $id, $name = null)
     {
-        // Вземаме order_id от записа
+        // Retrieve the order_id from the DSK payment record
         $dskOrder = new DskPaymentOrder((int) $id);
         if (Validate::isLoadedObject($dskOrder) && $dskOrder->order_id > 0) {
             $orderLink = $this->context->link->getAdminLink('AdminOrders') . '&id_order=' . (int) $dskOrder->order_id . '&vieworder';
@@ -197,17 +245,28 @@ class AdminDskPaymentOrdersController extends ModuleAdminController
     }
 
     /**
-     * Добавя бутони в toolbar
+     * Initialize page header toolbar buttons
+     *
+     * Removes the default "Add new" button since DSK payment records
+     * should only be created automatically when orders are placed,
+     * not manually by administrators.
+     *
+     * @return void
      */
     public function initPageHeaderToolbar()
     {
         parent::initPageHeaderToolbar();
-        // Премахваме бутона за добавяне - не искаме ръчно да се добавят записи
+        // Remove the "Add new" button - records should not be created manually
         unset($this->page_header_toolbar_btn['new']);
     }
 
     /**
-     * Render списъка
+     * Render the orders list view
+     *
+     * Adds the view action to each row and delegates to the parent
+     * class for actual rendering of the list table.
+     *
+     * @return string Rendered HTML list
      */
     public function renderList()
     {
@@ -215,4 +274,3 @@ class AdminDskPaymentOrdersController extends ModuleAdminController
         return parent::renderList();
     }
 }
-

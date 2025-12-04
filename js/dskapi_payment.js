@@ -1,17 +1,35 @@
 /**
- * @File: dskapi_payment.js
- * @Author: Ilko Ivanov
- * @Author e-mail: ilko.iv@gmail.com
- * @Publisher: Avalon Ltd
- * @Publisher e-mail: home@avalonbg.com
- * @Owner: Банка ДСК
- * @Version: 1.2.0
+ * DSK Payment Interest Rates Popup JavaScript
  *
- * JavaScript за попъп с лихвени схеми в страницата за плащане
+ * Handles the interest rates popup functionality on the payment execution page.
+ * Provides installment calculation and popup display for reviewing credit terms
+ * before confirming the order.
+ *
+ * @file dskapi_payment.js
+ * @author Ilko Ivanov
+ * @author_email ilko.iv@gmail.com
+ * @publisher Avalon Ltd
+ * @publisher_email home@avalonbg.com
+ * @owner Банка ДСК
+ * @version 1.2.0
  */
 
+/**
+ * Stores the previous installment count for reverting on validation errors
+ * @type {number}
+ */
 var dskapi_payment_old_vnoski;
 
+/**
+ * Create a cross-origin HTTP request object
+ *
+ * Provides compatibility for older browsers that use XDomainRequest
+ * instead of XMLHttpRequest for CORS requests.
+ *
+ * @param {string} method - HTTP method (GET, POST, etc.)
+ * @param {string} url - Request URL
+ * @returns {XMLHttpRequest|XDomainRequest|null} Request object or null if unsupported
+ */
 function createCORSRequest(method, url) {
   var xhr = new XMLHttpRequest();
   if ('withCredentials' in xhr) {
@@ -25,10 +43,28 @@ function createCORSRequest(method, url) {
   return xhr;
 }
 
+/**
+ * Store current installment count on dropdown focus
+ *
+ * Saves the current value before user changes it, allowing
+ * revert to previous value if validation fails.
+ *
+ * @param {number} _old_vnoski - Current installment count
+ * @returns {void}
+ */
 function dskapi_payment_pogasitelni_vnoski_input_focus(_old_vnoski) {
   dskapi_payment_old_vnoski = _old_vnoski;
 }
 
+/**
+ * Handle installment count dropdown change
+ *
+ * Fetches updated installment data from DSK API when user
+ * selects a different number of months. Updates the popup
+ * with new monthly payment, APR, and total amount.
+ *
+ * @returns {void}
+ */
 function dskapi_payment_pogasitelni_vnoski_input_change() {
   var dskapi_vnoski_el = document.getElementById(
     'dskapi_payment_pogasitelni_vnoski_input'
@@ -46,12 +82,14 @@ function dskapi_payment_pogasitelni_vnoski_input_change() {
     'dskapi_payment_product_id'
   );
 
+  // Validate required elements exist
   if (!dskapi_cid_el || !DSKAPI_LIVEURL_el || !dskapi_product_id_el) return;
 
   var dskapi_cid = dskapi_cid_el.value;
   var DSKAPI_LIVEURL = DSKAPI_LIVEURL_el.value;
   var dskapi_product_id = dskapi_product_id_el.value;
 
+  // Build API request URL
   var xmlhttpro = createCORSRequest(
     'GET',
     DSKAPI_LIVEURL +
@@ -76,6 +114,7 @@ function dskapi_payment_pogasitelni_vnoski_input_change() {
 
         if (dsk_is_visible) {
           if (options) {
+            // Update popup fields with new values
             var dskapi_vnoska_input = document.getElementById(
               'dskapi_payment_vnoska'
             );
@@ -97,10 +136,12 @@ function dskapi_payment_pogasitelni_vnoski_input_change() {
             }
             dskapi_payment_old_vnoski = dskapi_vnoski;
           } else {
+            // Selected installment count is below minimum
             alert('Избраният брой погасителни вноски е под минималния.');
             dskapi_vnoski_el.value = dskapi_payment_old_vnoski;
           }
         } else {
+          // Selected installment count exceeds maximum
           alert('Избраният брой погасителни вноски е над максималния.');
           dskapi_vnoski_el.value = dskapi_payment_old_vnoski;
         }
@@ -112,6 +153,16 @@ function dskapi_payment_pogasitelni_vnoski_input_change() {
   xmlhttpro.send();
 }
 
+/**
+ * Initialize the interest rates popup on the payment page
+ *
+ * Sets up event handlers for:
+ * - Opening popup when clicking the "Interest Rates" link
+ * - Closing popup via close button, clicking outside, or pressing Escape
+ * - Currency conversion before displaying popup
+ *
+ * @returns {void}
+ */
 function initDskapiPaymentPopup() {
   var interestRatesLink = document.getElementById(
     'dskapi_checkout_interest_rates_link'
@@ -125,7 +176,7 @@ function initDskapiPaymentPopup() {
     return;
   }
 
-  // Отваряне на попъпа при клик върху линка
+  // Open popup when clicking the interest rates link
   interestRatesLink.addEventListener('click', function (event) {
     event.preventDefault();
     event.stopPropagation();
@@ -139,7 +190,7 @@ function initDskapiPaymentPopup() {
     if (dskapi_price_el && dskapi_price_txt) {
       var dskapi_price = parseFloat(dskapi_price_el.value);
 
-      // Конвертиране на валута ако е необходимо
+      // Apply currency conversion if needed
       var dskapi_eur_el = document.getElementById('dskapi_payment_eur');
       var dskapi_currency_code_el = document.getElementById(
         'dskapi_payment_currency_code'
@@ -151,12 +202,14 @@ function initDskapiPaymentPopup() {
 
         switch (dskapi_eur) {
           case 1:
+            // Convert EUR to BGN
             if (dskapi_currency_code == 'EUR') {
               dskapi_price = dskapi_price * 1.95583;
             }
             break;
           case 2:
           case 3:
+            // Convert BGN to EUR
             if (dskapi_currency_code == 'BGN') {
               dskapi_price = dskapi_price / 1.95583;
             }
@@ -166,7 +219,7 @@ function initDskapiPaymentPopup() {
 
       dskapi_price_txt.value = dskapi_price.toFixed(2);
 
-      // Проверка за максимална стойност
+      // Check if price exceeds maximum allowed value
       if (
         dskapi_maxstojnost_el &&
         dskapi_price > parseFloat(dskapi_maxstojnost_el.value)
@@ -185,7 +238,7 @@ function initDskapiPaymentPopup() {
     return false;
   });
 
-  // Затваряне на попъпа при клик върху бутона "Затвори"
+  // Close popup when clicking the "Close" button
   if (closeButton) {
     closeButton.addEventListener('click', function (event) {
       event.preventDefault();
@@ -194,14 +247,14 @@ function initDskapiPaymentPopup() {
     });
   }
 
-  // Затваряне на попъпа при клик извън него
+  // Close popup when clicking outside of it
   popupContainer.addEventListener('click', function (event) {
     if (event.target === popupContainer) {
       popupContainer.style.display = 'none';
     }
   });
 
-  // Затваряне с Escape
+  // Close popup with Escape key
   document.addEventListener('keydown', function (event) {
     if (event.key === 'Escape' && popupContainer.style.display === 'block') {
       popupContainer.style.display = 'none';
@@ -209,13 +262,12 @@ function initDskapiPaymentPopup() {
   });
 }
 
-// Инициализация при зареждане на DOM
+// Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', function () {
   initDskapiPaymentPopup();
 });
 
-// Също опитваме се след пълно зареждане на страницата
+// Also try after full page load
 window.addEventListener('load', function () {
   setTimeout(initDskapiPaymentPopup, 100);
 });
-

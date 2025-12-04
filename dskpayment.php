@@ -1,6 +1,12 @@
 <?php
 
 /**
+ * DSK Payment Module for PrestaShop 1.6.x
+ *
+ * This module enables customers to purchase products on credit through DSK Bank.
+ * It provides payment gateway integration, credit calculation widgets, and
+ * order management functionality for DSK Bank credit purchases.
+ *
  * @File: dskpayment.php
  * @Author: Ilko Ivanov
  * @Author e-mail: ilko.iv@gmail.com
@@ -21,12 +27,22 @@ defined('_MYSQL_ENGINE_') or define('_MYSQL_ENGINE_', 'InnoDB');
 require_once __DIR__ . '/classes/DskPaymentOrder.php';
 
 /**
- * Class Dskpayment
+ * DSK Payment Module Class
+ *
+ * Main module class that extends PrestaShop's PaymentModule to provide
+ * DSK Bank credit purchase functionality. Handles payment processing,
+ * widget display, order management, and API communication.
+ *
+ * @package DskPayment
  * @extends PaymentModule
  */
 class Dskpayment extends PaymentModule
 {
-
+    /**
+     * List of PrestaShop hooks registered by this module
+     *
+     * @var array<string>
+     */
     const HOOKS = [
         'actionFrontControllerSetMedia',
         'payment',
@@ -37,6 +53,12 @@ class Dskpayment extends PaymentModule
         'displayShoppingCart'
     ];
 
+    /**
+     * Module constructor
+     *
+     * Initializes module properties, sets version compatibility,
+     * and displays module name and description.
+     */
     public function __construct()
     {
         $this->name = 'dskpayment';
@@ -53,6 +75,19 @@ class Dskpayment extends PaymentModule
             $this->warning = $this->l('Не е зададено име');
     }
 
+    /**
+     * Install the module
+     *
+     * Performs module installation including:
+     * - Parent module installation
+     * - Hook registration
+     * - Configuration setup
+     * - Database table creation
+     * - Order state creation
+     * - Admin tab installation
+     *
+     * @return bool True on success, false on failure
+     */
     public function install()
     {
         if (Shop::isFeatureActive())
@@ -94,13 +129,16 @@ class Dskpayment extends PaymentModule
     }
 
     /**
-     * Инсталира Admin Tab за DSK поръчки
+     * Install Admin Tab for DSK orders
      *
-     * @return bool
+     * Creates a new admin tab under the Orders section to display
+     * DSK payment orders with their status information.
+     *
+     * @return bool True on success, false on failure
      */
     private function installAdminTab()
     {
-        // Проверка дали таба вече съществува
+        // Check if tab already exists
         $existingTabId = (int) Tab::getIdFromClassName('AdminDskPaymentOrders');
         if ($existingTabId > 0) {
             return true;
@@ -111,15 +149,15 @@ class Dskpayment extends PaymentModule
         $tab->class_name = 'AdminDskPaymentOrders';
         $tab->module = $this->name;
 
-        // Намираме ID на родителския таб "Поръчки" (AdminParentOrders)
+        // Find parent tab ID for "Orders" (AdminParentOrders)
         $parentTabId = (int) Tab::getIdFromClassName('AdminParentOrders');
         if ($parentTabId <= 0) {
-            // Fallback: използваме AdminOrders
+            // Fallback: use AdminOrders
             $parentTabId = (int) Tab::getIdFromClassName('AdminOrders');
         }
         $tab->id_parent = $parentTabId > 0 ? $parentTabId : 0;
 
-        // Задаваме име на всички езици
+        // Set name for all languages
         $languages = Language::getLanguages(false);
         foreach ($languages as $language) {
             $tab->name[$language['id_lang']] = 'DSK Поръчки';
@@ -129,9 +167,11 @@ class Dskpayment extends PaymentModule
     }
 
     /**
-     * Деинсталира Admin Tab
+     * Uninstall Admin Tab
      *
-     * @return bool
+     * Removes the DSK orders admin tab when module is uninstalled.
+     *
+     * @return bool True on success, false on failure
      */
     private function uninstallAdminTab()
     {
@@ -145,6 +185,17 @@ class Dskpayment extends PaymentModule
         return true;
     }
 
+    /**
+     * Uninstall the module
+     *
+     * Removes all module data including:
+     * - Configuration values
+     * - Database tables
+     * - Order states
+     * - Admin tab
+     *
+     * @return bool True on success, false on failure
+     */
     public function uninstall()
     {
         if (
@@ -164,7 +215,10 @@ class Dskpayment extends PaymentModule
     }
 
     /**
-     * Creates required database tables for recurring plans and orders log.
+     * Creates required database tables for DSK payment orders tracking
+     *
+     * Creates the dskpayment_orders table to store order status
+     * information received from DSK Bank API callbacks.
      *
      * @return bool True on success, false otherwise
      */
@@ -190,7 +244,9 @@ class Dskpayment extends PaymentModule
     }
 
     /**
-     * Drops database tables on module uninstall.
+     * Drops database tables on module uninstall
+     *
+     * Removes the dskpayment_orders table when the module is uninstalled.
      *
      * @return bool True on success, false otherwise
      */
@@ -201,6 +257,13 @@ class Dskpayment extends PaymentModule
         return (bool) $db->execute($sql);
     }
 
+    /**
+     * Install order states for DSK payment
+     *
+     * Creates the order state used for DSK Bank credit orders.
+     *
+     * @return bool True on success, false otherwise
+     */
     private function installOrderStates()
     {
         return $this->createOrderState(
@@ -213,6 +276,13 @@ class Dskpayment extends PaymentModule
         );
     }
 
+    /**
+     * Uninstall order states
+     *
+     * Removes the DSK payment order state when module is uninstalled.
+     *
+     * @return bool True on success, false otherwise
+     */
     private function uninstallOrderStates()
     {
         $id_state = (int) Configuration::get('PS_OS_DSKPAYMENT');
@@ -227,6 +297,21 @@ class Dskpayment extends PaymentModule
         return true;
     }
 
+    /**
+     * Create or update an order state
+     *
+     * Creates a new order state or updates an existing one if it already
+     * exists for this module. Handles multi-language name assignment.
+     *
+     * @param string $configKey Configuration key to store order state ID
+     * @param string $name Order state name (will be translated)
+     * @param string $color Hex color code for order state display
+     * @param bool $logable Whether order state is loggable
+     * @param bool $invoice Whether order state allows invoice generation
+     * @param bool $hidden Whether order state is hidden from customer
+     *
+     * @return bool True on success, false otherwise
+     */
     private function createOrderState($configKey, $name, $color, $logable, $invoice, $hidden)
     {
         $id_state = (int) Configuration::get($configKey);
@@ -296,6 +381,14 @@ class Dskpayment extends PaymentModule
         return true;
     }
 
+    /**
+     * Module configuration page handler
+     *
+     * Processes form submission and displays the configuration form.
+     * Handles saving of module settings: status, CID, advertisement, and gap.
+     *
+     * @return string HTML output for configuration page
+     */
     public function getContent()
     {
         $output = null;
@@ -315,12 +408,23 @@ class Dskpayment extends PaymentModule
         return $output . $this->displayForm();
     }
 
+    /**
+     * Generate and display the module configuration form
+     *
+     * Creates a HelperForm with fields for:
+     * - Module enable/disable
+     * - Store CID (calculator ID)
+     * - Advertisement display toggle
+     * - Gap spacing above button
+     *
+     * @return string HTML form output
+     */
     public function displayForm()
     {
         // Get default language
         $default_lang = (int)Configuration::get('PS_LANG_DEFAULT');
 
-        // Init Fields form array
+        // Initialize form fields array
         $fields_form[0]['form'] = array(
             'legend' => array(
                 'title' => 'Настройки',
@@ -430,6 +534,16 @@ class Dskpayment extends PaymentModule
         return $helper->generateForm($fields_form);
     }
 
+    /**
+     * Check if the cart currency is supported by this payment method
+     *
+     * Verifies that the cart's currency is in the list of currencies
+     * supported by the DSK payment module.
+     *
+     * @param Cart $cart The cart object to check
+     *
+     * @return bool True if currency is supported, false otherwise
+     */
     public function checkCurrency($cart)
     {
         $currency_order = new Currency($cart->id_currency);
@@ -441,6 +555,17 @@ class Dskpayment extends PaymentModule
         return false;
     }
 
+    /**
+     * Hook: Display advertisement on homepage
+     *
+     * Displays DSK Bank advertisement banner on the store homepage
+     * if enabled in module configuration. Fetches advertisement data
+     * from DSK API and renders the template.
+     *
+     * @param array $params Hook parameters
+     *
+     * @return string HTML output or empty string if disabled/error
+     */
     public function hookDisplayHome($params)
     {
         $dskapi_cid = (string)Configuration::get('dskapi_cid');
@@ -486,6 +611,17 @@ class Dskpayment extends PaymentModule
         return $this->display(__FILE__, 'dskapipanel.tpl');
     }
 
+    /**
+     * Hook: Display payment method option
+     *
+     * Displays the DSK payment option in the payment methods list
+     * during checkout. Validates cart total against min/max limits
+     * and applies currency conversion if needed.
+     *
+     * @param array $params Hook parameters containing 'cart' object
+     *
+     * @return string HTML output or empty string if not available
+     */
     public function hookPayment($params)
     {
         if (!$this->active)
@@ -503,21 +639,25 @@ class Dskpayment extends PaymentModule
         $cart = $this->context->cart;
         $dskapi_price = (float) $cart->getOrderTotal(true);
 
+        // Fetch min/max limits from API
         $paramsdskapi = $this->makeApiRequest('/function/getminmax.php?cid=' . urlencode($dskapi_cid), 6);
         if ($paramsdskapi === null) {
             return '';
         }
 
+        // Apply currency conversion
         $dskapi_eur = (int)$paramsdskapi['dsk_eur'];
         switch ($dskapi_eur) {
             case 0:
                 break;
             case 1:
+                // Convert EUR to BGN
                 if ($dskapi_currency_code == "EUR") {
                     $dskapi_price = (float) number_format($dskapi_price * 1.95583, 2, ".", "");
                 }
                 break;
             case 2:
+                // Convert BGN to EUR
                 $dskapi_sign = "евро";
                 if ($dskapi_currency_code == "BGN") {
                     $dskapi_price = (float) number_format($dskapi_price / 1.95583, 2, ".", "");
@@ -529,12 +669,14 @@ class Dskpayment extends PaymentModule
         $dskapi_min_000 = (float) $paramsdskapi['dsk_min_000'];
         $dskapi_status_cp = $paramsdskapi['dsk_status'];
 
+        // Adjust minimum for 0% interest with <= 6 months
         $dskapi_purcent = (float) $paramsdskapi['dsk_purcent'];
         $dskapi_vnoski_default = (int) $paramsdskapi['dsk_vnoski_default'];
         if (($dskapi_purcent == 0) && ($dskapi_vnoski_default <= 6)) {
             $dskapi_minstojnost = $dskapi_min_000;
         }
 
+        // Validate cart total is within allowed range
         if (($dskapi_status_cp == 0) || ($dskapi_price < $dskapi_minstojnost) || ($dskapi_price > $dskapi_maxstojnost)) {
             return '';
         } else {
@@ -547,6 +689,16 @@ class Dskpayment extends PaymentModule
         }
     }
 
+    /**
+     * Hook: Display payment option for EU payment directive
+     *
+     * Returns payment option data for PrestaShop's EU payment directive
+     * compliance. Used in one-page checkout flows.
+     *
+     * @param array $params Hook parameters containing 'cart' object
+     *
+     * @return array|null Payment option array or null if not available
+     */
     public function hookDisplayPaymentEU($params)
     {
         if (!$this->active)
@@ -562,27 +714,34 @@ class Dskpayment extends PaymentModule
     }
 
     /**
-     * Hook actionFrontControllerSetMedia - зарежда скриптове и CSS файлове
-     * @param array $params
+     * Hook: Load CSS and JavaScript files for front-end pages
+     *
+     * Registers CSS and JavaScript files needed for DSK payment widgets
+     * on different pages (homepage, product, cart, payment). Uses filemtime
+     * for cache busting. Compatible with PrestaShop 1.6.x API.
+     *
+     * @param array $params Hook parameters
+     *
+     * @return void
      */
     public function hookActionFrontControllerSetMedia($params)
     {
-        // PrestaShop 1.6.x използва addCSS() и addJS() вместо registerStylesheet() и registerJavascript()
+        // PrestaShop 1.6.x uses addCSS() and addJS() instead of registerStylesheet() and registerJavascript()
+        // Homepage: load advertisement CSS/JS
         if (isset($this->context->controller->php_self) && 'index' === $this->context->controller->php_self) {
             $homeCssPath = _PS_MODULE_DIR_ . $this->name . '/css/dskapi_rek.css';
             $homeJsPath = _PS_MODULE_DIR_ . $this->name . '/js/dskapi_rek.js';
 
-            // Зареждане на CSS файл
-            // В PrestaShop 1.6.x addCSS() може да не поддържа query strings правилно за CSS файлове
-            // Затова използваме версия като част от пътя чрез директория или използваме пълен URL
+            // Load CSS file
+            // In PrestaShop 1.6.x addCSS() may not support query strings properly for CSS files
+            // So we use full URL with version for proper cache busting
             if (file_exists($homeCssPath)) {
                 $cssVersion = filemtime($homeCssPath);
-                // Опит 1: Използване на пълен URL с версия
                 $cssUrl = Tools::getShopDomainSsl(true, true) . __PS_BASE_URI__ . 'modules/' . $this->name . '/css/dskapi_rek.css?v=' . $cssVersion;
                 $this->context->controller->addCSS($cssUrl, 'all');
             }
 
-            // Зареждане на JavaScript файл с версиониране чрез filemtime
+            // Load JavaScript file with versioning via filemtime
             if (file_exists($homeJsPath)) {
                 $jsVersion = filemtime($homeJsPath);
                 $this->context->controller->addJS(
@@ -591,12 +750,12 @@ class Dskpayment extends PaymentModule
                 );
             }
         }
-        // PrestaShop 1.6.x използва addCSS() и addJS() вместо registerStylesheet() и registerJavascript()
+        // Product page: load product widget CSS/JS
         if (isset($this->context->controller->php_self) && 'product' === $this->context->controller->php_self) {
             $productJsPath = _PS_MODULE_DIR_ . $this->name . '/js/dskapi_product.js';
             $productCssPath = _PS_MODULE_DIR_ . $this->name . '/css/dskapi_product.css';
 
-            // Зареждане на JavaScript файл с версиониране чрез filemtime
+            // Load JavaScript file with versioning via filemtime
             if (file_exists($productJsPath)) {
                 $jsVersion = filemtime($productJsPath);
                 $this->context->controller->addJS(
@@ -605,16 +764,15 @@ class Dskpayment extends PaymentModule
                 );
             }
 
-            // Зареждане на CSS файл с версиониране чрез filemtime
-            // В PrestaShop 1.6.x addCSS() изисква пълен URL за правилно версиониране
+            // Load CSS file with versioning via filemtime
+            // In PrestaShop 1.6.x addCSS() requires full URL for proper versioning
             if (file_exists($productCssPath)) {
                 $cssVersion = filemtime($productCssPath);
                 $cssUrl = Tools::getShopDomainSsl(true, true) . __PS_BASE_URI__ . 'modules/' . $this->name . '/css/dskapi_product.css?v=' . $cssVersion;
                 $this->context->controller->addCSS($cssUrl, 'all');
             }
         }
-        // PrestaShop 1.6.x използва addCSS() и addJS() вместо registerStylesheet() и registerJavascript()
-        // Проверка за страницата с количката: controller=order и step=1 (или без step)
+        // Cart page: load cart widget CSS/JS (controller=order and step=1)
         $step = (int) Tools::getValue('step', 1);
         if (
             isset($this->context->controller->php_self)
@@ -624,15 +782,15 @@ class Dskpayment extends PaymentModule
             $cartJsPath = _PS_MODULE_DIR_ . $this->name . '/js/dskapi_cart.js';
             $cartCssPath = _PS_MODULE_DIR_ . $this->name . '/css/dskapi_cart.css';
 
-            // Зареждане на CSS файл с версиониране чрез filemtime
-            // В PrestaShop 1.6.x addCSS() изисква пълен URL за правилно версиониране
+            // Load CSS file with versioning via filemtime
+            // In PrestaShop 1.6.x addCSS() requires full URL for proper versioning
             if (file_exists($cartCssPath)) {
                 $cssVersion = filemtime($cartCssPath);
                 $cssUrl = Tools::getShopDomainSsl(true, true) . __PS_BASE_URI__ . 'modules/' . $this->name . '/css/dskapi_cart.css?v=' . $cssVersion;
                 $this->context->controller->addCSS($cssUrl, 'all');
             }
 
-            // Зареждане на JavaScript файл с версиониране чрез filemtime
+            // Load JavaScript file with versioning via filemtime
             if (file_exists($cartJsPath)) {
                 $jsVersion = filemtime($cartJsPath);
                 $this->context->controller->addJS(
@@ -642,8 +800,8 @@ class Dskpayment extends PaymentModule
             }
         }
 
-        // Зареждане на CSS/JS за страницата за плащане на модула (payment)
-        // Проверяваме дали контролерът е от модула dskpayment и е payment контролер
+        // Payment page: load payment page CSS/JS
+        // Check if controller is from dskpayment module and is payment controller
         $controller = $this->context->controller;
         $isModulePaymentController = (
             $controller instanceof ModuleFrontController
@@ -657,14 +815,14 @@ class Dskpayment extends PaymentModule
             $paymentJsPath = _PS_MODULE_DIR_ . $this->name . '/js/dskapi_payment.js';
             $paymentCssPath = _PS_MODULE_DIR_ . $this->name . '/css/dskapi_payment.css';
 
-            // Зареждане на CSS файл с версиониране чрез filemtime
+            // Load CSS file with versioning via filemtime
             if (file_exists($paymentCssPath)) {
                 $cssVersion = filemtime($paymentCssPath);
                 $cssUrl = Tools::getShopDomainSsl(true, true) . __PS_BASE_URI__ . 'modules/' . $this->name . '/css/dskapi_payment.css?v=' . $cssVersion;
                 $this->context->controller->addCSS($cssUrl, 'all');
             }
 
-            // Зареждане на JavaScript файл с версиониране чрез filemtime
+            // Load JavaScript file with versioning via filemtime
             if (file_exists($paymentJsPath)) {
                 $jsVersion = filemtime($paymentJsPath);
                 $this->context->controller->addJS(
@@ -676,21 +834,28 @@ class Dskpayment extends PaymentModule
     }
 
     /**
-     * Статична променлива за следене дали бутонът вече е показан
+     * Static flag to track if widget has already been displayed
+     *
+     * Prevents duplicate widget display when multiple hooks are available
+     *
      * @var bool
      */
     private static $widgetDisplayed = false;
 
     /**
-     * Общ метод за показване на бутона в продуктова страница
-     * Предотвратява дублиране ако и двата хука са налични
-     * 
-     * @param array $params
-     * @return string
+     * Common method for displaying widget on product page
+     *
+     * Prevents duplicate display if both hooks (displayReassurance and
+     * displayRightColumnProduct) are available. Validates product ID and
+     * price before rendering.
+     *
+     * @param array $params Hook parameters
+     *
+     * @return string HTML output or empty string
      */
     private function displayProductWidget($params)
     {
-        // Проверка дали бутонът вече е показан в този request
+        // Check if widget has already been displayed in this request
         if (self::$widgetDisplayed) {
             return '';
         }
@@ -709,7 +874,7 @@ class Dskpayment extends PaymentModule
             return '';
         }
 
-        // Маркираме, че бутонът е показан
+        // Mark widget as displayed
         self::$widgetDisplayed = true;
 
         return $this->renderDskWidget(
@@ -719,16 +884,40 @@ class Dskpayment extends PaymentModule
         );
     }
 
+    /**
+     * Hook: Display widget in reassurance area on product page
+     *
+     * @param array $params Hook parameters
+     *
+     * @return string HTML output
+     */
     public function hookDisplayReassurance($params)
     {
         return $this->displayProductWidget($params);
     }
 
+    /**
+     * Hook: Display widget in right column on product page
+     *
+     * @param array $params Hook parameters
+     *
+     * @return string HTML output
+     */
     public function hookDisplayRightColumnProduct($params)
     {
         return $this->displayProductWidget($params);
     }
 
+    /**
+     * Hook: Display widget on shopping cart page
+     *
+     * Displays DSK credit widget on the cart page if cart contains
+     * available products and total is within allowed limits.
+     *
+     * @param array $params Hook parameters
+     *
+     * @return string HTML output or empty string
+     */
     public function hookDisplayShoppingCart($params)
     {
         if ('order' !== $this->context->controller->php_self) {
@@ -845,7 +1034,7 @@ class Dskpayment extends PaymentModule
 
         $link = new Link();
         $languageId = isset($this->context->language->id) ? (int) $this->context->language->id : (int) Configuration::get('PS_LANG_DEFAULT');
-        // URL към DSK payment контролера (директен checkout с DSK)
+        // URL to DSK payment controller (direct checkout with DSK)
         $checkoutUrl = $link->getModuleLink('dskpayment', 'payment', array(), true);
 
         $this->context->smarty->assign([
@@ -886,26 +1075,22 @@ class Dskpayment extends PaymentModule
             'dskapi_checkout_url' => $checkoutUrl
         ]);
 
-        // PrestaShop 1.6.x използва display() вместо fetch()
-        // Пътят е относителен спрямо модула, не в 'module:' формат
+        // PrestaShop 1.6.x uses display() instead of fetch()
+        // Path is relative to module, not in 'module:' format
         return $this->display(__FILE__, $templatePath);
     }
 
-
     /**
-     * Извършва API заявка и връща декодирания JSON отговор
+     * Execute an HTTP request to the DSK Bank API
      *
-     * @param string $endpoint API endpoint (без базовия URL)
-     * @param int $timeout Timeout в секунди
-     * @return array|null Декодираният JSON отговор или null при грешка
-     */
-    /**
-     * Executes an HTTP request to the DSK API and returns the decoded response.
+     * Sends a GET request to the specified DSK API endpoint and returns
+     * the decoded JSON response. Uses cURL with SSL verification disabled
+     * for compatibility with various server configurations.
      *
-     * @param string $endpoint Relative API endpoint path
-     * @param int $timeout Request timeout in seconds
+     * @param string $endpoint Relative API endpoint path (e.g., '/function/getminmax.php?cid=xxx')
+     * @param int $timeout Request timeout in seconds (default: 5)
      *
-     * @return array|null
+     * @return array|null Decoded JSON response as associative array, or null on failure
      */
     private function makeApiRequest($endpoint, $timeout = 5)
     {
@@ -934,14 +1119,13 @@ class Dskpayment extends PaymentModule
     }
 
     /**
-     * Проверява дали устройството е мобилно
+     * Detect if the current visitor uses a mobile device
      *
-     * @return bool
-     */
-    /**
-     * Detects whether the current visitor uses a mobile device.
+     * Uses User-Agent string analysis to determine if the request
+     * comes from a mobile device. This affects CSS class prefixes
+     * and image paths used in templates for responsive styling.
      *
-     * @return bool
+     * @return bool True if mobile device detected, false otherwise
      */
     private function isMobileDevice()
     {

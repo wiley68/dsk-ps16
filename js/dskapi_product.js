@@ -1,15 +1,35 @@
 /**
- * @File: dskapi_product.js
- * @Author: Ilko Ivanov
- * @Publisher: Avalon Ltd
- * @Owner: Банка ДСК
- * @Version: 1.2.0
+ * DSK Payment Product Widget JavaScript
  *
- * JavaScript за продуктова страница - PrestaShop 1.6.x
+ * Handles the DSK Bank credit purchase widget functionality on product pages.
+ * Provides dynamic price calculation, installment display, popup management,
+ * and silent add-to-cart with direct redirect to DSK payment.
+ *
+ * @file dskapi_product.js
+ * @author Ilko Ivanov
+ * @publisher Avalon Ltd
+ * @owner Банка ДСК
+ * @version 1.2.0
+ *
+ * Compatible with PrestaShop 1.6.x
  */
 
+/**
+ * Stores the previous installment count for reverting on validation errors
+ * @type {number}
+ */
 var old_vnoski;
 
+/**
+ * Create a cross-origin HTTP request object
+ *
+ * Provides compatibility for older browsers that use XDomainRequest
+ * instead of XMLHttpRequest for CORS requests.
+ *
+ * @param {string} method - HTTP method (GET, POST, etc.)
+ * @param {string} url - Request URL
+ * @returns {XMLHttpRequest|XDomainRequest|null} Request object or null if unsupported
+ */
 function createCORSRequest(method, url) {
   var xhr = new XMLHttpRequest();
   if ('withCredentials' in xhr) {
@@ -23,10 +43,28 @@ function createCORSRequest(method, url) {
   return xhr;
 }
 
+/**
+ * Store current installment count on dropdown focus
+ *
+ * Saves the current value before user changes it, allowing
+ * revert to previous value if validation fails.
+ *
+ * @param {number} _old_vnoski - Current installment count
+ * @returns {void}
+ */
 function dskapi_pogasitelni_vnoski_input_focus(_old_vnoski) {
   old_vnoski = _old_vnoski;
 }
 
+/**
+ * Handle installment count dropdown change
+ *
+ * Fetches updated installment data from DSK API when user
+ * selects a different number of months. Updates the popup
+ * with new monthly payment, APR, and total amount.
+ *
+ * @returns {void}
+ */
 function dskapi_pogasitelni_vnoski_input_change() {
   var dskapi_vnoski_input = document.getElementById(
     'dskapi_pogasitelni_vnoski_input'
@@ -37,7 +75,7 @@ function dskapi_pogasitelni_vnoski_input_change() {
 
   var dskapi_vnoski = parseFloat(dskapi_vnoski_input.value);
 
-  // Първо опитваме да вземем цената от dskapi_price_txt, ако не съществува - от dskapi_price
+  // Try to get price from dskapi_price_txt first, fallback to dskapi_price
   var dskapi_price_el = document.getElementById('dskapi_price_txt');
   var dskapi_price = dskapi_price_el ? parseFloat(dskapi_price_el.value) : null;
 
@@ -56,10 +94,12 @@ function dskapi_pogasitelni_vnoski_input_change() {
   var DSKAPI_LIVEURL = document.getElementById('DSKAPI_LIVEURL');
   var dskapi_product_id = document.getElementById('dskapi_product_id');
 
+  // Validate required elements exist
   if (!dskapi_cid || !DSKAPI_LIVEURL || !dskapi_product_id) {
     return;
   }
 
+  // Build API request URL
   var xmlhttpro = createCORSRequest(
     'GET',
     DSKAPI_LIVEURL.value +
@@ -89,6 +129,7 @@ function dskapi_pogasitelni_vnoski_input_change() {
 
         if (dsk_is_visible) {
           if (options) {
+            // Update popup fields with new values
             var dskapi_vnoska_input = document.getElementById('dskapi_vnoska');
             var dskapi_vnoska_txt = document.getElementById('dskapi_vnoska_txt');
             var dskapi_gpr = document.getElementById('dskapi_gpr');
@@ -115,6 +156,7 @@ function dskapi_pogasitelni_vnoski_input_change() {
               dskapi_vnoski_txt.innerHTML = dskapi_vnoski;
             }
           } else {
+            // Selected installment count is below minimum
             alert('Избраният брой погасителни вноски е под минималния.');
             dskapi_vnoski_input.value = old_vnoski;
             if (dskapi_vnoski_txt) {
@@ -122,6 +164,7 @@ function dskapi_pogasitelni_vnoski_input_change() {
             }
           }
         } else {
+          // Selected installment count exceeds maximum
           alert('Избраният брой погасителни вноски е над максималния.');
           dskapi_vnoski_input.value = old_vnoski;
           if (dskapi_vnoski_txt) {
@@ -137,26 +180,29 @@ function dskapi_pogasitelni_vnoski_input_change() {
 }
 
 /**
- * Изчислява и актуализира динамично цената на продукта въз основа на текущите опции и количество.
- * Записва резултата в dskapi_price_txt и актуализира показваните данни за вноските.
+ * Calculate and update product price dynamically
  *
- * @param {boolean} showPopup - Дали да показва попъпа при валидна цена (true) или да не го променя (false)
- * @return {void}
+ * Computes the total price based on current product options and quantity.
+ * Stores the result in dskapi_price_txt and updates installment display.
+ * Handles currency conversion if configured.
+ *
+ * @param {boolean} showPopup - Whether to show popup on valid price (true) or not change it (false)
+ * @returns {void}
  */
 function dskapi_calculateAndUpdateProductPrice(showPopup) {
   showPopup = showPopup || false;
 
-  // PrestaShop 1.6.x: Взимаме цената от различни селектори
+  // PrestaShop 1.6.x: Get price from various selectors
   var dskapi_price1;
 
-  // Опит 1: #our_price_display (стандартно за PS 1.6.x)
+  // Attempt 1: #our_price_display (standard for PS 1.6.x)
   var priceEl = document.getElementById('our_price_display');
   if (priceEl) {
     var priceText = priceEl.textContent || priceEl.innerText;
     dskapi_price1 = priceText.replace(/[^\d,.]/g, '').replace(',', '.');
   }
 
-  // Опит 2: span.price (атрибут или текст)
+  // Attempt 2: span.price (attribute or text)
   if (!dskapi_price1) {
     priceEl = document.querySelector('span.price[itemprop="price"]');
     if (priceEl) {
@@ -168,7 +214,7 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
     }
   }
 
-  // Опит 3: itemprop="price"
+  // Attempt 3: itemprop="price"
   if (!dskapi_price1) {
     priceEl = document.querySelector('[itemprop="price"]');
     if (priceEl) {
@@ -180,7 +226,7 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
     }
   }
 
-  // Ако не сме успели да намерим цена, използваме стойността от скритото поле
+  // If price not found, use value from hidden field
   if (!dskapi_price1) {
     var dskapi_price = document.getElementById('dskapi_price');
     if (dskapi_price) {
@@ -190,7 +236,7 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
     }
   }
 
-  // Взимаме количеството
+  // Get quantity
   var dskapi_quantity = 1;
   var qtyInput = document.getElementById('quantity_wanted');
   if (qtyInput) {
@@ -202,10 +248,10 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
     }
   }
 
-  // Изчисляваме общата цена
+  // Calculate total price
   var dskapi_priceall = parseFloat(dskapi_price1) * dskapi_quantity;
 
-  // Прилагаме валутни конверсии ако е необходимо
+  // Apply currency conversion if needed
   var dskapi_eur_el = document.getElementById('dskapi_eur');
   var dskapi_currency_code_el = document.getElementById('dskapi_currency_code');
 
@@ -215,14 +261,17 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
 
     switch (dskapi_eur) {
       case 0:
+        // No conversion
         break;
       case 1:
+        // Convert EUR to BGN
         if (dskapi_currency_code == 'EUR') {
           dskapi_priceall = dskapi_priceall * 1.95583;
         }
         break;
       case 2:
       case 3:
+        // Convert BGN to EUR
         if (dskapi_currency_code == 'BGN') {
           dskapi_priceall = dskapi_priceall / 1.95583;
         }
@@ -230,13 +279,13 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
     }
   }
 
-  // Записваме изчислената цена в dskapi_price_txt
+  // Store calculated price in dskapi_price_txt
   var dskapi_price_txt = document.getElementById('dskapi_price_txt');
   if (dskapi_price_txt) {
     dskapi_price_txt.value = dskapi_priceall.toFixed(2);
   }
 
-  // Проверяваме максималното позволено
+  // Check maximum allowed value
   var dskapi_maxstojnost = document.getElementById('dskapi_maxstojnost');
   var dskapiProductPopupContainer = document.getElementById(
     'dskapi-product-popup-container'
@@ -249,17 +298,17 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
   var maxPrice = parseFloat(dskapi_maxstojnost.value);
   var isValid = dskapi_priceall <= maxPrice;
 
-  // Актуализираме данните за вноските
+  // Update installment data
   if (isValid) {
-    // Извикваме функцията за преизчисляване на вноските
+    // Call function to recalculate installments
     dskapi_pogasitelni_vnoski_input_change();
 
-    // Ако showPopup е true и попъпът съществува, показваме го
+    // If showPopup is true and popup exists, display it
     if (showPopup && dskapiProductPopupContainer) {
       dskapiProductPopupContainer.style.display = 'block';
     }
   } else {
-    // Ако цената е над максималната и showPopup е true, показваме alert
+    // If price exceeds maximum and showPopup is true, show alert
     if (showPopup) {
       alert(
         'Максимално позволената цена за кредит ' +
@@ -271,11 +320,12 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
 }
 
 /**
- * Функция за записване на cookie
+ * Set a browser cookie
  *
- * @param {string} name
- * @param {string} value
- * @param {number} days
+ * @param {string} name - Cookie name
+ * @param {string} value - Cookie value
+ * @param {number} days - Expiration time in days (fractions allowed)
+ * @returns {void}
  */
 function dskapi_setCookie(name, value, days) {
   var expires = new Date();
@@ -290,30 +340,35 @@ function dskapi_setCookie(name, value, days) {
 }
 
 /**
- * Добавя продукта в количката СКРИТО (без попъп) и пренасочва директно към DSK payment
- * Адаптирано за PrestaShop 1.6.x
+ * Add product to cart silently and redirect to DSK payment
  *
- * @return {void}
+ * Performs a hidden AJAX add-to-cart request without showing
+ * PrestaShop's default popup, then redirects directly to the
+ * DSK payment controller for credit purchase.
+ *
+ * Adapted for PrestaShop 1.6.x compatibility.
+ *
+ * @returns {void}
  */
 function dskapi_addToCartAndRedirectToCheckout() {
-  // Записваме избора на платежен метод в cookie (валиден за 1 час)
+  // Save payment method selection in cookie (valid for 1 hour)
   dskapi_setCookie('dskpayment_selected', '1', 1 / 24);
 
-  // Вземаме URL към DSK payment контролера
+  // Get URL to DSK payment controller
   var checkoutUrlEl = document.getElementById('dskapi_checkout_url');
   var checkoutUrl = checkoutUrlEl ? checkoutUrlEl.value : '';
 
-  // Вземаме id_product от страницата
+  // Get id_product from page
   var idProductEl = document.getElementById('product_page_product_id');
   var idProduct = idProductEl ? idProductEl.value : null;
 
-  // Fallback: опитваме от dskapi_product_id
+  // Fallback: try from dskapi_product_id
   if (!idProduct) {
     var dskapiProductId = document.getElementById('dskapi_product_id');
     idProduct = dskapiProductId ? dskapiProductId.value : null;
   }
 
-  // Fallback: опитваме от URL
+  // Fallback: try from URL
   if (!idProduct) {
     var urlMatch = window.location.href.match(/id_product=(\d+)/);
     if (urlMatch) {
@@ -322,21 +377,21 @@ function dskapi_addToCartAndRedirectToCheckout() {
   }
 
   if (!idProduct) {
-    console.error('DSK Payment: Не може да се намери ID на продукта');
+    console.error('DSK Payment: Cannot find product ID');
     if (checkoutUrl) {
       window.location.href = checkoutUrl;
     }
     return;
   }
 
-  // Вземаме количеството
+  // Get quantity
   var quantity = 1;
   var qtyInput = document.getElementById('quantity_wanted');
   if (qtyInput) {
     quantity = parseInt(qtyInput.value) || 1;
   }
 
-  // Вземаме id_product_attribute ако има избрана комбинация
+  // Get id_product_attribute if combination is selected
   var idProductAttribute = 0;
   var ipaInput = document.getElementById('idCombination');
   if (ipaInput) {
@@ -350,33 +405,33 @@ function dskapi_addToCartAndRedirectToCheckout() {
     }
   }
 
-  // Вземаме static_token за CSRF защита (PrestaShop 1.6.x)
+  // Get static_token for CSRF protection (PrestaShop 1.6.x)
   var staticToken = '';
   var tokenInput = document.querySelector('input[name="token"]');
   if (tokenInput) {
     staticToken = tokenInput.value;
   }
-  // Fallback: глобална променлива
+  // Fallback: global variable
   if (!staticToken && typeof static_token !== 'undefined') {
     staticToken = static_token;
   }
 
-  // Функция за redirect след добавяне
+  // Redirect function after adding to cart
   var doRedirect = function () {
     if (checkoutUrl) {
       window.location.href = checkoutUrl;
     }
   };
 
-  // СКРИТО добавяне в количката чрез директна AJAX заявка
-  // Не използваме ajaxCart.add() защото тя показва попъп
+  // Silent add-to-cart via direct AJAX request
+  // We don't use ajaxCart.add() because it shows a popup
   var ajaxUrl = '';
   if (typeof baseDir !== 'undefined') {
     ajaxUrl = baseDir + 'index.php';
   } else if (typeof baseUri !== 'undefined') {
     ajaxUrl = baseUri + 'index.php';
   } else {
-    // Fallback: опитваме да извлечем от текущия URL
+    // Fallback: extract from current URL
     ajaxUrl = window.location.protocol + '//' + window.location.host + '/index.php';
   }
 
@@ -394,32 +449,41 @@ function dskapi_addToCartAndRedirectToCheckout() {
   xhr.onreadystatechange = function () {
     if (xhr.readyState === 4) {
       if (xhr.status === 200) {
-        // Успешно добавяне - redirect към DSK payment
+        // Success - redirect to DSK payment
         doRedirect();
       } else {
-        // При грешка - пак опитваме redirect (може продуктът вече да е в количката)
-        console.warn('DSK Payment: AJAX отговор със статус ' + xhr.status);
+        // On error - still try redirect (product may already be in cart)
+        console.warn('DSK Payment: AJAX response status ' + xhr.status);
         doRedirect();
       }
     }
   };
 
   xhr.onerror = function () {
-    // При network грешка - пак redirect
-    console.error('DSK Payment: Network грешка при добавяне в количката');
+    // On network error - still redirect
+    console.error('DSK Payment: Network error when adding to cart');
     doRedirect();
   };
 
   xhr.send(params);
 
-  // Fallback timeout: ако AJAX не отговори в рамките на 3 секунди, redirect
+  // Fallback timeout: if AJAX doesn't respond within 3 seconds, redirect anyway
   setTimeout(function () {
     doRedirect();
   }, 3000);
 }
 
 /**
- * Инициализира DSK widget-а на продуктовата страница
+ * Initialize the DSK widget on product page
+ *
+ * Sets up event handlers for:
+ * - Main DSK button (direct checkout or popup display)
+ * - Back button to close popup
+ * - "Buy on Credit" button in popup
+ * - Quantity changes
+ * - Product combination/attribute changes
+ *
+ * @returns {void}
  */
 function initDskapiWidget() {
   var btn_dskapi = document.getElementById('btn_dskapi');
@@ -438,19 +502,20 @@ function initDskapiWidget() {
     var dskapi_back_credit = document.getElementById('dskapi_back_credit');
     var dskapi_buy_credit = document.getElementById('dskapi_buy_credit');
 
-    // Бутон за отваряне на попъпа или директно добавяне
+    // Main button - open popup or direct add-to-cart
     btn_dskapi.onclick = function (event) {
       event.preventDefault();
       if (dskapi_button_status == 1) {
+        // Direct checkout mode
         dskapi_addToCartAndRedirectToCheckout();
       } else {
-        // При клик на бутона показваме попъпа ако цената е валидна
+        // Show popup if price is valid
         dskapi_calculateAndUpdateProductPrice(true);
       }
       return false;
     };
 
-    // Бутон за затваряне на попъпа
+    // Back button - close popup
     if (dskapi_back_credit) {
       dskapi_back_credit.onclick = function (event) {
         event.preventDefault();
@@ -461,7 +526,7 @@ function initDskapiWidget() {
       };
     }
 
-    // Бутон "Купи на изплащане" в попъпа
+    // "Buy on Credit" button in popup
     if (dskapi_buy_credit) {
       dskapi_buy_credit.onclick = function (event) {
         event.preventDefault();
@@ -473,7 +538,7 @@ function initDskapiWidget() {
       };
     }
 
-    // Слушаме за промяна на количеството
+    // Listen for quantity changes
     var qtyInput = document.getElementById('quantity_wanted');
     if (qtyInput) {
       qtyInput.onchange = function () {
@@ -484,16 +549,16 @@ function initDskapiWidget() {
       };
     }
 
-    // PrestaShop 1.6.x: Слушаме за промяна на комбинации чрез jQuery
+    // PrestaShop 1.6.x: Listen for combination changes via jQuery
     if (typeof jQuery !== 'undefined') {
       jQuery(document).on('change', '.attribute_select, .attribute_radio', function () {
-        // Изчакваме PrestaShop да обнови цената
+        // Wait for PrestaShop to update the price
         setTimeout(function () {
           dskapi_calculateAndUpdateProductPrice(false);
         }, 300);
       });
 
-      // Слушаме за findCombination callback (ако темата го използва)
+      // Listen for findCombination callback (if theme uses it)
       if (typeof combinationsPrices !== 'undefined') {
         var originalFindCombination = window.findCombination;
         if (typeof originalFindCombination === 'function') {
@@ -507,21 +572,21 @@ function initDskapiWidget() {
       }
     }
 
-    // Изпълняваме процедурата веднъж след зареждане на страницата
+    // Run initial calculation after page load
     setTimeout(function () {
       dskapi_calculateAndUpdateProductPrice(false);
     }, 100);
   }
 }
 
-// Инициализация при зареждане на страницата
-// PrestaShop 1.6.x използва jQuery
+// Initialize on page load
+// PrestaShop 1.6.x uses jQuery
 if (typeof jQuery !== 'undefined') {
   jQuery(document).ready(function () {
     initDskapiWidget();
   });
 } else {
-  // Fallback без jQuery
+  // Fallback without jQuery
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initDskapiWidget);
   } else {
@@ -529,7 +594,7 @@ if (typeof jQuery !== 'undefined') {
   }
 }
 
-// Допълнителен fallback при load
+// Additional fallback on window load
 if (typeof jQuery !== 'undefined') {
   jQuery(window).load(function () {
     setTimeout(initDskapiWidget, 200);
