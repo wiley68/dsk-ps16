@@ -845,7 +845,8 @@ class Dskpayment extends PaymentModule
 
         $link = new Link();
         $languageId = isset($this->context->language->id) ? (int) $this->context->language->id : (int) Configuration::get('PS_LANG_DEFAULT');
-        $checkoutUrl = $link->getPageLink('order', true, $languageId);
+        // URL към DSK payment контролера (директен checkout с DSK)
+        $checkoutUrl = $link->getModuleLink('dskpayment', 'payment', array(), true);
 
         $this->context->smarty->assign([
             'dskapi_zaglavie' => isset($paramsdskapi['dsk_zaglavie']) ? $paramsdskapi['dsk_zaglavie'] : '',

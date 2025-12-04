@@ -1,4 +1,14 @@
-let old_vnoski;
+/**
+ * @File: dskapi_product.js
+ * @Author: Ilko Ivanov
+ * @Publisher: Avalon Ltd
+ * @Owner: Банка ДСК
+ * @Version: 1.2.0
+ *
+ * JavaScript за продуктова страница - PrestaShop 1.6.x
+ */
+
+var old_vnoski;
 
 function createCORSRequest(method, url) {
   var xhr = new XMLHttpRequest();
@@ -18,21 +28,21 @@ function dskapi_pogasitelni_vnoski_input_focus(_old_vnoski) {
 }
 
 function dskapi_pogasitelni_vnoski_input_change() {
-  const dskapi_vnoski_input = document.getElementById(
+  var dskapi_vnoski_input = document.getElementById(
     'dskapi_pogasitelni_vnoski_input'
   );
   if (!dskapi_vnoski_input) {
     return;
   }
 
-  const dskapi_vnoski = parseFloat(dskapi_vnoski_input.value);
+  var dskapi_vnoski = parseFloat(dskapi_vnoski_input.value);
 
   // Първо опитваме да вземем цената от dskapi_price_txt, ако не съществува - от dskapi_price
-  let dskapi_price_el = document.getElementById('dskapi_price_txt');
-  let dskapi_price = dskapi_price_el ? parseFloat(dskapi_price_el.value) : null;
+  var dskapi_price_el = document.getElementById('dskapi_price_txt');
+  var dskapi_price = dskapi_price_el ? parseFloat(dskapi_price_el.value) : null;
 
   if (!dskapi_price || isNaN(dskapi_price)) {
-    const dskapi_price_hidden = document.getElementById('dskapi_price');
+    var dskapi_price_hidden = document.getElementById('dskapi_price');
     if (dskapi_price_hidden) {
       dskapi_price = parseFloat(dskapi_price_hidden.value);
     }
@@ -42,9 +52,9 @@ function dskapi_pogasitelni_vnoski_input_change() {
     return;
   }
 
-  const dskapi_cid = document.getElementById('dskapi_cid');
-  const DSKAPI_LIVEURL = document.getElementById('DSKAPI_LIVEURL');
-  const dskapi_product_id = document.getElementById('dskapi_product_id');
+  var dskapi_cid = document.getElementById('dskapi_cid');
+  var DSKAPI_LIVEURL = document.getElementById('DSKAPI_LIVEURL');
+  var dskapi_product_id = document.getElementById('dskapi_product_id');
 
   if (!dskapi_cid || !DSKAPI_LIVEURL || !dskapi_product_id) {
     return;
@@ -75,40 +85,48 @@ function dskapi_pogasitelni_vnoski_input_change() {
         var dsk_vnoska = parseFloat(response.dsk_vnoska);
         var dsk_gpr = parseFloat(response.dsk_gpr);
         var dsk_is_visible = response.dsk_is_visible;
-        const dskapi_vnoski_txt = document.getElementById('dskapi_vnoski_txt');
+        var dskapi_vnoski_txt = document.getElementById('dskapi_vnoski_txt');
+
         if (dsk_is_visible) {
           if (options) {
-            const dskapi_vnoska_input =
-              document.getElementById('dskapi_vnoska');
-            const dskapi_vnoska_txt =
-              document.getElementById('dskapi_vnoska_txt');
-            const dskapi_gpr = document.getElementById('dskapi_gpr');
-            const dskapi_obshtozaplashtane_input = document.getElementById(
+            var dskapi_vnoska_input = document.getElementById('dskapi_vnoska');
+            var dskapi_vnoska_txt = document.getElementById('dskapi_vnoska_txt');
+            var dskapi_gpr = document.getElementById('dskapi_gpr');
+            var dskapi_obshtozaplashtane_input = document.getElementById(
               'dskapi_obshtozaplashtane'
             );
-            dskapi_vnoska_input.value = dsk_vnoska.toFixed(2);
-            dskapi_vnoska_txt.innerHTML = dsk_vnoska.toFixed(2);
-            dskapi_gpr.value = dsk_gpr.toFixed(2);
-            dskapi_obshtozaplashtane_input.value = (
-              dsk_vnoska * dskapi_vnoski
-            ).toFixed(2);
+
+            if (dskapi_vnoska_input) {
+              dskapi_vnoska_input.value = dsk_vnoska.toFixed(2);
+            }
+            if (dskapi_vnoska_txt) {
+              dskapi_vnoska_txt.innerHTML = dsk_vnoska.toFixed(2);
+            }
+            if (dskapi_gpr) {
+              dskapi_gpr.value = dsk_gpr.toFixed(2);
+            }
+            if (dskapi_obshtozaplashtane_input) {
+              dskapi_obshtozaplashtane_input.value = (
+                dsk_vnoska * dskapi_vnoski
+              ).toFixed(2);
+            }
             old_vnoski = dskapi_vnoski;
-            dskapi_vnoski_txt.innerHTML = dskapi_vnoski;
+            if (dskapi_vnoski_txt) {
+              dskapi_vnoski_txt.innerHTML = dskapi_vnoski;
+            }
           } else {
             alert('Избраният брой погасителни вноски е под минималния.');
-            var dskapi_vnoski_input = document.getElementById(
-              'dskapi_pogasitelni_vnoski_input'
-            );
             dskapi_vnoski_input.value = old_vnoski;
-            dskapi_vnoski_txt.innerHTML = old_vnoski;
+            if (dskapi_vnoski_txt) {
+              dskapi_vnoski_txt.innerHTML = old_vnoski;
+            }
           }
         } else {
           alert('Избраният брой погасителни вноски е над максималния.');
-          var dskapi_vnoski_input = document.getElementById(
-            'dskapi_pogasitelni_vnoski_input'
-          );
           dskapi_vnoski_input.value = old_vnoski;
-          dskapi_vnoski_txt.innerHTML = old_vnoski;
+          if (dskapi_vnoski_txt) {
+            dskapi_vnoski_txt.innerHTML = old_vnoski;
+          }
         }
       } catch (e) {
         console.error('DSK API Error:', e);
@@ -125,30 +143,46 @@ function dskapi_pogasitelni_vnoski_input_change() {
  * @param {boolean} showPopup - Дали да показва попъпа при валидна цена (true) или да не го променя (false)
  * @return {void}
  */
-function dskapi_calculateAndUpdateProductPrice(showPopup = false) {
-  // Взимаме цената с опциите
-  let dskapi_price1;
-  let el_dskapi_price1 = document.querySelector('span.current-price-value');
+function dskapi_calculateAndUpdateProductPrice(showPopup) {
+  showPopup = showPopup || false;
 
-  if (el_dskapi_price1 !== null) {
-    dskapi_price1 = el_dskapi_price1.getAttribute('content');
-  } else {
-    el_dskapi_price1 = document.querySelector('[itemprop=price]');
-    if (el_dskapi_price1 !== null) {
-      el_dskapi_price1 = el_dskapi_price1.innerHTML.replace(/[^\d,-]/g, '');
-      if (el_dskapi_price1 !== null) {
-        if (el_dskapi_price1.indexOf('.') !== -1) {
-          dskapi_price1 = el_dskapi_price1.replace(/[^\d.-]/g, '');
-        } else {
-          dskapi_price1 = el_dskapi_price1.replace(/,/g, '.');
-        }
+  // PrestaShop 1.6.x: Взимаме цената от различни селектори
+  var dskapi_price1;
+
+  // Опит 1: #our_price_display (стандартно за PS 1.6.x)
+  var priceEl = document.getElementById('our_price_display');
+  if (priceEl) {
+    var priceText = priceEl.textContent || priceEl.innerText;
+    dskapi_price1 = priceText.replace(/[^\d,.]/g, '').replace(',', '.');
+  }
+
+  // Опит 2: span.price (атрибут или текст)
+  if (!dskapi_price1) {
+    priceEl = document.querySelector('span.price[itemprop="price"]');
+    if (priceEl) {
+      dskapi_price1 = priceEl.getAttribute('content');
+      if (!dskapi_price1) {
+        var priceText = priceEl.textContent || priceEl.innerText;
+        dskapi_price1 = priceText.replace(/[^\d,.]/g, '').replace(',', '.');
+      }
+    }
+  }
+
+  // Опит 3: itemprop="price"
+  if (!dskapi_price1) {
+    priceEl = document.querySelector('[itemprop="price"]');
+    if (priceEl) {
+      dskapi_price1 = priceEl.getAttribute('content');
+      if (!dskapi_price1) {
+        var priceText = priceEl.textContent || priceEl.innerText;
+        dskapi_price1 = priceText.replace(/[^\d,.]/g, '').replace(',', '.');
       }
     }
   }
 
   // Ако не сме успели да намерим цена, използваме стойността от скритото поле
   if (!dskapi_price1) {
-    const dskapi_price = document.getElementById('dskapi_price');
+    var dskapi_price = document.getElementById('dskapi_price');
     if (dskapi_price) {
       dskapi_price1 = dskapi_price.value;
     } else {
@@ -157,27 +191,27 @@ function dskapi_calculateAndUpdateProductPrice(showPopup = false) {
   }
 
   // Взимаме количеството
-  let dskapi_quantity = 1;
-  if (
-    document.getElementsByName('qty') !== null &&
-    document.getElementsByName('qty').length > 0
-  ) {
-    dskapi_quantity =
-      parseFloat(document.getElementsByName('qty')[0].value) || 1;
+  var dskapi_quantity = 1;
+  var qtyInput = document.getElementById('quantity_wanted');
+  if (qtyInput) {
+    dskapi_quantity = parseFloat(qtyInput.value) || 1;
+  } else {
+    var qtyInputs = document.getElementsByName('qty');
+    if (qtyInputs && qtyInputs.length > 0) {
+      dskapi_quantity = parseFloat(qtyInputs[0].value) || 1;
+    }
   }
 
   // Изчисляваме общата цена
-  let dskapi_priceall = parseFloat(dskapi_price1) * dskapi_quantity;
+  var dskapi_priceall = parseFloat(dskapi_price1) * dskapi_quantity;
 
   // Прилагаме валутни конверсии ако е необходимо
-  const dskapi_eur_el = document.getElementById('dskapi_eur');
-  const dskapi_currency_code_el = document.getElementById(
-    'dskapi_currency_code'
-  );
+  var dskapi_eur_el = document.getElementById('dskapi_eur');
+  var dskapi_currency_code_el = document.getElementById('dskapi_currency_code');
 
   if (dskapi_eur_el && dskapi_currency_code_el) {
-    const dskapi_eur = parseInt(dskapi_eur_el.value) || 0;
-    const dskapi_currency_code = dskapi_currency_code_el.value;
+    var dskapi_eur = parseInt(dskapi_eur_el.value) || 0;
+    var dskapi_currency_code = dskapi_currency_code_el.value;
 
     switch (dskapi_eur) {
       case 0:
@@ -197,14 +231,14 @@ function dskapi_calculateAndUpdateProductPrice(showPopup = false) {
   }
 
   // Записваме изчислената цена в dskapi_price_txt
-  const dskapi_price_txt = document.getElementById('dskapi_price_txt');
+  var dskapi_price_txt = document.getElementById('dskapi_price_txt');
   if (dskapi_price_txt) {
     dskapi_price_txt.value = dskapi_priceall.toFixed(2);
   }
 
   // Проверяваме максималното позволено
-  const dskapi_maxstojnost = document.getElementById('dskapi_maxstojnost');
-  const dskapiProductPopupContainer = document.getElementById(
+  var dskapi_maxstojnost = document.getElementById('dskapi_maxstojnost');
+  var dskapiProductPopupContainer = document.getElementById(
     'dskapi-product-popup-container'
   );
 
@@ -212,8 +246,8 @@ function dskapi_calculateAndUpdateProductPrice(showPopup = false) {
     return;
   }
 
-  const maxPrice = parseFloat(dskapi_maxstojnost.value);
-  const isValid = dskapi_priceall <= maxPrice;
+  var maxPrice = parseFloat(dskapi_maxstojnost.value);
+  var isValid = dskapi_priceall <= maxPrice;
 
   // Актуализираме данните за вноските
   if (isValid) {
@@ -237,209 +271,271 @@ function dskapi_calculateAndUpdateProductPrice(showPopup = false) {
 }
 
 /**
- * Добавя продукта в количката и пренасочва към checkout с избран платежен метод DSK
+ * Функция за записване на cookie
+ *
+ * @param {string} name
+ * @param {string} value
+ * @param {number} days
+ */
+function dskapi_setCookie(name, value, days) {
+  var expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie =
+    name +
+    '=' +
+    value +
+    ';expires=' +
+    expires.toUTCString() +
+    ';path=/;SameSite=Lax';
+}
+
+/**
+ * Добавя продукта в количката СКРИТО (без попъп) и пренасочва директно към DSK payment
+ * Адаптирано за PrestaShop 1.6.x
  *
  * @return {void}
  */
 function dskapi_addToCartAndRedirectToCheckout() {
-  // Функция за записване на cookie
-  const setCookie = function (name, value, days) {
-    const expires = new Date();
-    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-    document.cookie =
-      name +
-      '=' +
-      value +
-      ';expires=' +
-      expires.toUTCString() +
-      ';path=/;SameSite=Lax';
-  };
-
   // Записваме избора на платежен метод в cookie (валиден за 1 час)
-  setCookie('dskpayment_selected', '1', 1 / 24);
+  dskapi_setCookie('dskpayment_selected', '1', 1 / 24);
 
-  // Намираме стандартния бутон за добавяне в количката
-  const addToCartButton = document.querySelector(
-    'button[data-button-action=add-to-cart]'
-  );
+  // Вземаме URL към DSK payment контролера
+  var checkoutUrlEl = document.getElementById('dskapi_checkout_url');
+  var checkoutUrl = checkoutUrlEl ? checkoutUrlEl.value : '';
 
-  if (addToCartButton) {
-    // Регистрираме event listener преди да кликнем на бутона
-    let cartUpdated = false;
-    const checkoutRedirect = function () {
-      if (!cartUpdated) {
-        cartUpdated = true;
-        const checkoutUrl = document.getElementById(
-          'dskapi_checkout_url'
-        ).value;
-        if (checkoutUrl) {
-          window.location.href = checkoutUrl;
-        }
-      }
-    };
+  // Вземаме id_product от страницата
+  var idProductEl = document.getElementById('product_page_product_id');
+  var idProduct = idProductEl ? idProductEl.value : null;
 
-    // Слушаме за успешно добавяне в количката
-    // PrestaShop 1.7.x използва jQuery събития
-    if (typeof jQuery !== 'undefined') {
-      jQuery(document).on('updatedCart', checkoutRedirect);
-      jQuery(document).on('cartUpdated', checkoutRedirect);
-      jQuery(document).on('updateCart', checkoutRedirect);
+  // Fallback: опитваме от dskapi_product_id
+  if (!idProduct) {
+    var dskapiProductId = document.getElementById('dskapi_product_id');
+    idProduct = dskapiProductId ? dskapiProductId.value : null;
+  }
+
+  // Fallback: опитваме от URL
+  if (!idProduct) {
+    var urlMatch = window.location.href.match(/id_product=(\d+)/);
+    if (urlMatch) {
+      idProduct = urlMatch[1];
     }
-    // Fallback за PrestaShop 8.x (ако се използва prestashop глобален обект)
-    if (typeof prestashop !== 'undefined' && prestashop.on) {
-      prestashop.on('updateCart', checkoutRedirect);
-      prestashop.on('updatedCart', checkoutRedirect);
-    }
+  }
 
-    // Добавяме продукта в количката чрез кликване на стандартния бутон
-    addToCartButton.click();
-
-    // Fallback: ако след 1 секунда не е настъпило събитие, редиректваме
-    setTimeout(checkoutRedirect, 1000);
-  } else {
-    // Ако няма стандартен бутон, редиректваме директно към чекаута
-    const checkoutUrl = document.getElementById('dskapi_checkout_url').value;
+  if (!idProduct) {
+    console.error('DSK Payment: Не може да се намери ID на продукта');
     if (checkoutUrl) {
       window.location.href = checkoutUrl;
     }
+    return;
   }
+
+  // Вземаме количеството
+  var quantity = 1;
+  var qtyInput = document.getElementById('quantity_wanted');
+  if (qtyInput) {
+    quantity = parseInt(qtyInput.value) || 1;
+  }
+
+  // Вземаме id_product_attribute ако има избрана комбинация
+  var idProductAttribute = 0;
+  var ipaInput = document.getElementById('idCombination');
+  if (ipaInput) {
+    idProductAttribute = parseInt(ipaInput.value) || 0;
+  }
+  // Fallback: groups
+  if (!idProductAttribute) {
+    ipaInput = document.querySelector('input[name="id_product_attribute"]');
+    if (ipaInput) {
+      idProductAttribute = parseInt(ipaInput.value) || 0;
+    }
+  }
+
+  // Вземаме static_token за CSRF защита (PrestaShop 1.6.x)
+  var staticToken = '';
+  var tokenInput = document.querySelector('input[name="token"]');
+  if (tokenInput) {
+    staticToken = tokenInput.value;
+  }
+  // Fallback: глобална променлива
+  if (!staticToken && typeof static_token !== 'undefined') {
+    staticToken = static_token;
+  }
+
+  // Функция за redirect след добавяне
+  var doRedirect = function () {
+    if (checkoutUrl) {
+      window.location.href = checkoutUrl;
+    }
+  };
+
+  // СКРИТО добавяне в количката чрез директна AJAX заявка
+  // Не използваме ajaxCart.add() защото тя показва попъп
+  var ajaxUrl = '';
+  if (typeof baseDir !== 'undefined') {
+    ajaxUrl = baseDir + 'index.php';
+  } else if (typeof baseUri !== 'undefined') {
+    ajaxUrl = baseUri + 'index.php';
+  } else {
+    // Fallback: опитваме да извлечем от текущия URL
+    ajaxUrl = window.location.protocol + '//' + window.location.host + '/index.php';
+  }
+
+  var params =
+    'controller=cart&add=1&ajax=true' +
+    '&id_product=' + idProduct +
+    '&qty=' + quantity +
+    '&id_product_attribute=' + idProductAttribute +
+    '&token=' + staticToken;
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', ajaxUrl, true);
+  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) {
+        // Успешно добавяне - redirect към DSK payment
+        doRedirect();
+      } else {
+        // При грешка - пак опитваме redirect (може продуктът вече да е в количката)
+        console.warn('DSK Payment: AJAX отговор със статус ' + xhr.status);
+        doRedirect();
+      }
+    }
+  };
+
+  xhr.onerror = function () {
+    // При network грешка - пак redirect
+    console.error('DSK Payment: Network грешка при добавяне в количката');
+    doRedirect();
+  };
+
+  xhr.send(params);
+
+  // Fallback timeout: ако AJAX не отговори в рамките на 3 секунди, redirect
+  setTimeout(function () {
+    doRedirect();
+  }, 3000);
 }
 
+/**
+ * Инициализира DSK widget-а на продуктовата страница
+ */
 function initDskapiWidget() {
-  const btn_dskapi = document.getElementById('btn_dskapi');
-  if (btn_dskapi !== null && btn_dskapi.dataset.dskapiBound !== '1') {
-    btn_dskapi.dataset.dskapiBound = '1';
-    const dskapi_button_status = parseInt(
-      document.getElementById('dskapi_button_status').value
-    );
-    const dskapiProductPopupContainer = document.getElementById(
+  var btn_dskapi = document.getElementById('btn_dskapi');
+
+  if (btn_dskapi !== null && btn_dskapi.getAttribute('data-dskapi-bound') !== '1') {
+    btn_dskapi.setAttribute('data-dskapi-bound', '1');
+
+    var dskapi_button_status_el = document.getElementById('dskapi_button_status');
+    var dskapi_button_status = dskapi_button_status_el
+      ? parseInt(dskapi_button_status_el.value)
+      : 0;
+
+    var dskapiProductPopupContainer = document.getElementById(
       'dskapi-product-popup-container'
     );
-    const dskapi_back_credit = document.getElementById('dskapi_back_credit');
-    const dskapi_buy_credit = document.getElementById('dskapi_buy_credit');
+    var dskapi_back_credit = document.getElementById('dskapi_back_credit');
+    var dskapi_buy_credit = document.getElementById('dskapi_buy_credit');
 
-    btn_dskapi.addEventListener('click', (event) => {
+    // Бутон за отваряне на попъпа или директно добавяне
+    btn_dskapi.onclick = function (event) {
+      event.preventDefault();
       if (dskapi_button_status == 1) {
-        event.preventDefault();
         dskapi_addToCartAndRedirectToCheckout();
       } else {
         // При клик на бутона показваме попъпа ако цената е валидна
         dskapi_calculateAndUpdateProductPrice(true);
       }
-    });
+      return false;
+    };
 
-    dskapi_back_credit.addEventListener('click', (event) => {
-      dskapiProductPopupContainer.style.display = 'none';
-    });
+    // Бутон за затваряне на попъпа
+    if (dskapi_back_credit) {
+      dskapi_back_credit.onclick = function (event) {
+        event.preventDefault();
+        if (dskapiProductPopupContainer) {
+          dskapiProductPopupContainer.style.display = 'none';
+        }
+        return false;
+      };
+    }
 
-    dskapi_buy_credit.addEventListener('click', (event) => {
-      event.preventDefault();
-      dskapiProductPopupContainer.style.display = 'none';
-      dskapi_addToCartAndRedirectToCheckout();
-    });
+    // Бутон "Купи на изплащане" в попъпа
+    if (dskapi_buy_credit) {
+      dskapi_buy_credit.onclick = function (event) {
+        event.preventDefault();
+        if (dskapiProductPopupContainer) {
+          dskapiProductPopupContainer.style.display = 'none';
+        }
+        dskapi_addToCartAndRedirectToCheckout();
+        return false;
+      };
+    }
 
     // Слушаме за промяна на количеството
-    const qtyInputs = document.getElementsByName('qty');
-    if (qtyInputs.length > 0) {
-      qtyInputs[0].addEventListener('change', function () {
-        // При промяна на количеството актуализираме данните без да показваме попъпа
+    var qtyInput = document.getElementById('quantity_wanted');
+    if (qtyInput) {
+      qtyInput.onchange = function () {
         dskapi_calculateAndUpdateProductPrice(false);
-      });
-      qtyInputs[0].addEventListener('input', function () {
-        // При въвеждане на количеството актуализираме данните без да показваме попъпа
+      };
+      qtyInput.onkeyup = function () {
         dskapi_calculateAndUpdateProductPrice(false);
-      });
+      };
     }
 
-    // Слушаме за промяна на цената чрез MutationObserver
-    const priceObserver = new MutationObserver(function (mutations) {
-      mutations.forEach(function (mutation) {
-        if (mutation.type === 'attributes' || mutation.type === 'childList') {
-          // При промяна на цената актуализираме данните без да показваме попъпа
-          dskapi_calculateAndUpdateProductPrice(false);
-        }
-      });
-    });
-
-    // Наблюдаваме промени в елементите с цена
-    const priceElements = [
-      document.querySelector('span.current-price-value'),
-      document.querySelector('[itemprop=price]'),
-    ];
-
-    priceElements.forEach(function (element) {
-      if (element) {
-        priceObserver.observe(element, {
-          attributes: true,
-          attributeFilter: ['content'],
-          childList: true,
-          subtree: true,
-          characterData: true,
-        });
-      }
-    });
-
-    // Слушаме и за PrestaShop събития за промяна на продукта
-    // PrestaShop 1.7.x използва jQuery събития
+    // PrestaShop 1.6.x: Слушаме за промяна на комбинации чрез jQuery
     if (typeof jQuery !== 'undefined') {
-      jQuery(document).on('updatedProduct', function () {
-        dskapi_calculateAndUpdateProductPrice(false);
+      jQuery(document).on('change', '.attribute_select, .attribute_radio', function () {
+        // Изчакваме PrestaShop да обнови цената
+        setTimeout(function () {
+          dskapi_calculateAndUpdateProductPrice(false);
+        }, 300);
       });
-      jQuery(document).on('updatedProductCombination', function () {
-        dskapi_calculateAndUpdateProductPrice(false);
-      });
-      jQuery(document).on('updatedProductAttributes', function () {
-        dskapi_calculateAndUpdateProductPrice(false);
-      });
-      jQuery(document).on('productUpdated', function () {
-        dskapi_calculateAndUpdateProductPrice(false);
-      });
-    }
-    // Fallback за PrestaShop 8.x (ако се използва prestashop глобален обект)
-    if (typeof prestashop !== 'undefined' && prestashop.on) {
-      prestashop.on('updatedProduct', function () {
-        dskapi_calculateAndUpdateProductPrice(false);
-      });
-      prestashop.on('updatedProductCombination', function () {
-        dskapi_calculateAndUpdateProductPrice(false);
-      });
-      prestashop.on('updatedProductAttributes', function () {
-        dskapi_calculateAndUpdateProductPrice(false);
-      });
+
+      // Слушаме за findCombination callback (ако темата го използва)
+      if (typeof combinationsPrices !== 'undefined') {
+        var originalFindCombination = window.findCombination;
+        if (typeof originalFindCombination === 'function') {
+          window.findCombination = function () {
+            originalFindCombination.apply(this, arguments);
+            setTimeout(function () {
+              dskapi_calculateAndUpdateProductPrice(false);
+            }, 300);
+          };
+        }
+      }
     }
 
     // Изпълняваме процедурата веднъж след зареждане на страницата
-    // за да изчислим цената с текущите опции и количество (включително след refresh)
     setTimeout(function () {
       dskapi_calculateAndUpdateProductPrice(false);
     }, 100);
   }
 }
 
-// Инициализация при зареждане на страницата - PrestaShop 1.7.x стандартен подход
-// Използваме jQuery ready като последен ред, както в работещите модули за PS 1.7.x
-jQuery(document).ready(function ($) {
-  initDskapiWidget();
-
-  // Слушаме за PrestaShop събития за реинициализация при промяна на продукта
-  // PrestaShop 1.7.x използва jQuery събития
-  $(document).on('updatedProduct', function () {
+// Инициализация при зареждане на страницата
+// PrestaShop 1.6.x използва jQuery
+if (typeof jQuery !== 'undefined') {
+  jQuery(document).ready(function () {
     initDskapiWidget();
   });
-  $(document).on('updatedProductCombination', function () {
+} else {
+  // Fallback без jQuery
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDskapiWidget);
+  } else {
     initDskapiWidget();
-  });
-  $(document).on('updatedProductAttributes', function () {
-    initDskapiWidget();
-  });
-  $(document).on('productUpdated', function () {
-    initDskapiWidget();
-  });
-
-  // Fallback за PrestaShop 8.x (ако се използва prestashop глобален обект)
-  if (typeof prestashop !== 'undefined' && prestashop.on) {
-    prestashop.on('updatedProduct', initDskapiWidget);
-    prestashop.on('updatedProductCombination', initDskapiWidget);
-    prestashop.on('updatedProductAttributes', initDskapiWidget);
   }
-});
+}
+
+// Допълнителен fallback при load
+if (typeof jQuery !== 'undefined') {
+  jQuery(window).load(function () {
+    setTimeout(initDskapiWidget, 200);
+  });
+} else {
+  window.onload = function () {
+    setTimeout(initDskapiWidget, 200);
+  };
+}
