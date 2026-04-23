@@ -17,8 +17,8 @@
  * @Publisher: Avalon Ltd
  * @Publisher e-mail: home@avalonbg.com
  * @Owner: Банка ДСК
- * @Version: 1.2.0
- * @since 1.2.0
+ * @Version: 1.2.1
+ * @since 1.2.1
  */
 class DskpaymentValidationModuleFrontController extends ModuleFrontController
 {
@@ -161,14 +161,14 @@ class DskpaymentValidationModuleFrontController extends ModuleFrontController
                 // Convert to BGN
                 $dskapi_currency_code_send = 0;
                 if ($dskapi_currency_code == "EUR") {
-                    $dskapi_total = number_format($dskapi_total * 1.95583, 2, ".", "");
+                    $dskapi_total = $dskapi_total * 1.95583;
                 }
                 break;
             case 2:
                 // Convert to EUR
                 $dskapi_currency_code_send = 1;
                 if ($dskapi_currency_code == "BGN") {
-                    $dskapi_total = number_format($dskapi_total / 1.95583, 2, ".", "");
+                    $dskapi_total = $dskapi_total / 1.95583;
                 }
                 break;
         }
@@ -255,7 +255,7 @@ class DskpaymentValidationModuleFrontController extends ModuleFrontController
             'address2' => str_replace('"', '', str_replace("'", "", htmlspecialchars_decode($dskapi_address2, ENT_QUOTES))),
             'address2city' => str_replace('"', '', str_replace("'", "", htmlspecialchars_decode($dskapi_address2city, ENT_QUOTES))),
             'postcode' => $dskapi_postcode,
-            'price' => $dskapi_total,
+            'price' => number_format($dskapi_total, 2, ".", ""),
             'address' => str_replace('"', '', str_replace("'", "", htmlspecialchars_decode($dskapi_address1, ENT_QUOTES))),
             'addresscity' => str_replace('"', '', str_replace("'", "", htmlspecialchars_decode($dskapi_address1city, ENT_QUOTES))),
             'products_id' => $products_id,

@@ -9,7 +9,7 @@
  * @Publisher: Avalon Ltd
  * @Publisher e-mail: home@avalonbg.com
  * @Owner: Банка ДСК
- * @Version: 1.2.0
+ * @Version: 1.2.1
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -27,7 +27,7 @@ if (!defined('_PS_VERSION_')) {
  * as defined by DSK Bank's API.
  *
  * @package DskPayment
- * @since 1.2.0
+ * @since 1.2.1
  */
 class DskPaymentOrder extends ObjectModel
 {

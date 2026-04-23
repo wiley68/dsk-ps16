@@ -9,7 +9,7 @@
  * @author Ilko Ivanov
  * @publisher Avalon Ltd
  * @owner Банка ДСК
- * @version 1.2.0
+ * @version 1.2.1
  *
  * Compatible with PrestaShop 1.6.x
  */
@@ -208,8 +208,8 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
     if (priceEl) {
       dskapi_price1 = priceEl.getAttribute('content');
       if (!dskapi_price1) {
-        var priceText = priceEl.textContent || priceEl.innerText;
-        dskapi_price1 = priceText.replace(/[^\d,.]/g, '').replace(',', '.');
+        var priceText2 = priceEl.textContent || priceEl.innerText;
+        dskapi_price1 = priceText2.replace(/[^\d,.]/g, '').replace(',', '.');
       }
     }
   }
@@ -220,8 +220,8 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
     if (priceEl) {
       dskapi_price1 = priceEl.getAttribute('content');
       if (!dskapi_price1) {
-        var priceText = priceEl.textContent || priceEl.innerText;
-        dskapi_price1 = priceText.replace(/[^\d,.]/g, '').replace(',', '.');
+        var priceText3 = priceEl.textContent || priceEl.innerText;
+        dskapi_price1 = priceText3.replace(/[^\d,.]/g, '').replace(',', '.');
       }
     }
   }
@@ -553,6 +553,18 @@ function initDskapiWidget() {
     if (typeof jQuery !== 'undefined') {
       jQuery(document).on('change', '.attribute_select, .attribute_radio', function () {
         // Wait for PrestaShop to update the price
+        setTimeout(function () {
+          dskapi_calculateAndUpdateProductPrice(false);
+        }, 300);
+      });
+
+      // PrestaShop 1.6: color swatches are <a class="color_pick"> (no change on select/radio)
+      jQuery(document).on('click', '.color_pick', function () {
+        setTimeout(function () {
+          dskapi_calculateAndUpdateProductPrice(false);
+        }, 300);
+      });
+      jQuery(document).on('change', '.color_pick_hidden', function () {
         setTimeout(function () {
           dskapi_calculateAndUpdateProductPrice(false);
         }, 300);

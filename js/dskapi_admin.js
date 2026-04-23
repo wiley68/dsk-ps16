@@ -5,7 +5,7 @@
  *
  * @file dskapi_admin.js
  * @author Ilko Ivanov
- * @version 1.2.0
+ * @version 1.2.1
  */
 
 /**

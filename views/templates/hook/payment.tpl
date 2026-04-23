@@ -5,7 +5,7 @@
     * @Publisher: Avalon Ltd
     * @Publisher e-mail: home@avalonbg.com
     * @Owner: Банка ДСК
-    * @Version: 1.2.0
+    * @Version: 1.2.1
 *}
 <p class="payment_module">
     <a href="{$link->getModuleLink('dskpayment', 'payment')|escape:'html'}" class="cash" title="Банка ДСК покупки на Кредит" rel="nofollow">

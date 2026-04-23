@@ -11,7 +11,7 @@
  * @publisher Avalon Ltd
  * @publisher_email home@avalonbg.com
  * @owner Банка ДСК
- * @version 1.2.0
+ * @version 1.2.1
  */
 
 /**

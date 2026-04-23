@@ -9,7 +9,7 @@
  * @author Ilko Ivanov
  * @publisher Avalon Ltd
  * @owner Банка ДСК
- * @version 1.2.0
+ * @version 1.2.1
  */
 
 /**

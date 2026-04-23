@@ -13,7 +13,7 @@
  * @Publisher: Avalon Ltd
  * @Publisher e-mail: home@avalonbg.com
  * @Owner: Банка ДСК
- * @Version: 1.2.0
+ * @Version: 1.2.1
  */
 if (!defined('_PS_VERSION_'))
     exit;
@@ -63,7 +63,7 @@ class Dskpayment extends PaymentModule
     {
         $this->name = 'dskpayment';
         $this->tab = 'payments_gateways';
-        $this->version = '1.2.0';
+        $this->version = '1.2.1';
         $this->author = 'Ilko Ivanov';
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => '1.6.99');
         $this->bootstrap = true;
