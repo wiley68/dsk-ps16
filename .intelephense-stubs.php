@@ -209,7 +209,7 @@ class DbQuery
 class Db
 {
     /**
-     * @return self
+     * @return Db
      */
     public static function getInstance()
     {
@@ -230,6 +230,17 @@ class Db
      * @return string|false
      */
     public function getValue($sql)
+    {
+        return false;
+    }
+
+    /**
+     * @param DbQuery|string $sql
+     * @param bool           $use_cache
+     *
+     * @return array|false
+     */
+    public function getRow($sql, $use_cache = true)
     {
         return false;
     }

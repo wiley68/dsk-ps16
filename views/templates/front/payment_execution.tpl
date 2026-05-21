@@ -31,6 +31,7 @@
 <input type="hidden" id="dskapi_payment_cid" value="{$dskapi_cid}" />
 <input type="hidden" id="dskapi_payment_product_id" value="{$dskapi_product_id}" />
 <input type="hidden" id="dskapi_payment_LIVEURL" value="{$DSKAPI_LIVEURL}" />
+<input type="hidden" id="dskapi_payment_PRODUCT_API_URL" value="{$DSKAPI_PRODUCT_API_URL}" />
 <input type="hidden" id="dskapi_payment_maxstojnost" value="{$dskapi_maxstojnost}" />
 <input type="hidden" id="dskapi_payment_eur" value="{$dskapi_eur}" />
 <input type="hidden" id="dskapi_payment_currency_code" value="{$dskapi_currency_code}" />

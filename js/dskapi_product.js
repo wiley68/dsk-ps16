@@ -44,6 +44,38 @@ function createCORSRequest(method, url) {
 }
 
 /**
+ * Build cached product API URL (module proxy).
+ *
+ * @param {string} baseUrl
+ * @param {string} cid
+ * @param {number|string} price
+ * @param {number|string} productId
+ * @param {number|string} installments
+ * @returns {string}
+ */
+function dskapi_buildProductApiUrl(
+  baseUrl,
+  cid,
+  price,
+  productId,
+  installments,
+) {
+  var sep = baseUrl.indexOf("?") >= 0 ? "&" : "?";
+  return (
+    baseUrl +
+    sep +
+    "cid=" +
+    encodeURIComponent(cid) +
+    "&price=" +
+    encodeURIComponent(price) +
+    "&product_id=" +
+    encodeURIComponent(productId) +
+    "&dskapi_vnoski=" +
+    encodeURIComponent(installments)
+  );
+}
+
+/**
  * Store current installment count on dropdown focus
  *
  * Saves the current value before user changes it, allowing
@@ -91,26 +123,26 @@ function dskapi_pogasitelni_vnoski_input_change() {
   }
 
   var dskapi_cid = document.getElementById("dskapi_cid");
-  var DSKAPI_LIVEURL = document.getElementById("DSKAPI_LIVEURL");
+  var DSKAPI_PRODUCT_API_URL = document.getElementById(
+    "DSKAPI_PRODUCT_API_URL",
+  );
   var dskapi_product_id = document.getElementById("dskapi_product_id");
 
   // Validate required elements exist
-  if (!dskapi_cid || !DSKAPI_LIVEURL || !dskapi_product_id) {
+  if (!dskapi_cid || !DSKAPI_PRODUCT_API_URL || !dskapi_product_id) {
     return;
   }
 
-  // Build API request URL
+  // Build API request URL (cached via shop module)
   var xmlhttpro = createCORSRequest(
     "GET",
-    DSKAPI_LIVEURL.value +
-      "/function/getproductcustom.php?cid=" +
-      dskapi_cid.value +
-      "&price=" +
-      dskapi_price +
-      "&product_id=" +
-      dskapi_product_id.value +
-      "&dskapi_vnoski=" +
+    dskapi_buildProductApiUrl(
+      DSKAPI_PRODUCT_API_URL.value,
+      dskapi_cid.value,
+      dskapi_price,
+      dskapi_product_id.value,
       dskapi_vnoski,
+    ),
   );
 
   if (!xmlhttpro) {

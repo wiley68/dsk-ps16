@@ -17,6 +17,9 @@
  * @Version: 1.2.2
  * @since 1.2.1
  */
+
+require_once dirname(__FILE__) . '/../../classes/DskPaymentApiCache.php';
+
 class DskpaymentPaymentModuleFrontController extends ModuleFrontController
 {
     /**
@@ -158,10 +161,7 @@ class DskpaymentPaymentModuleFrontController extends ModuleFrontController
 
         // Fetch data for interest rates popup
         $dskapi_product_id = $this->resolveCartProductId();
-        $apiUrl = '/function/getproduct.php?cid=' . urlencode($dskapi_cid)
-            . '&price=' . urlencode((string) $dskapi_price)
-            . '&product_id=' . urlencode((string) $dskapi_product_id);
-        $paramsdskapi_popup = $this->makeApiRequest($apiUrl);
+        $paramsdskapi_popup = DskPaymentApiCache::fetchProduct($dskapi_cid, $dskapi_product_id, $dskapi_price, 0);
 
         // Initialize popup data with defaults
         $dskapi_popup_enabled = false;
@@ -210,6 +210,7 @@ class DskpaymentPaymentModuleFrontController extends ModuleFrontController
             'dskapi_cid' => $dskapi_cid,
             'dskapi_product_id' => $dskapi_product_id,
             'DSKAPI_LIVEURL' => DSKAPI_LIVEURL,
+            'DSKAPI_PRODUCT_API_URL' => $this->context->link->getModuleLink('dskpayment', 'productapi', array(), true),
             'dskapi_sign' => $dskapi_sign,
             'dskapi_currency_code' => $dskapi_currency_code,
             'dskapi_vnoski' => $dskapi_vnoski,

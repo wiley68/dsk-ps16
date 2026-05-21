@@ -44,6 +44,38 @@ function createCORSRequest(method, url) {
 }
 
 /**
+ * Build cached product API URL (module proxy).
+ *
+ * @param {string} baseUrl
+ * @param {string} cid
+ * @param {number|string} price
+ * @param {number|string} productId
+ * @param {number|string} installments
+ * @returns {string}
+ */
+function dskapi_buildProductApiUrl(
+  baseUrl,
+  cid,
+  price,
+  productId,
+  installments,
+) {
+  var sep = baseUrl.indexOf("?") >= 0 ? "&" : "?";
+  return (
+    baseUrl +
+    sep +
+    "cid=" +
+    encodeURIComponent(cid) +
+    "&price=" +
+    encodeURIComponent(price) +
+    "&product_id=" +
+    encodeURIComponent(productId) +
+    "&dskapi_vnoski=" +
+    encodeURIComponent(installments)
+  );
+}
+
+/**
  * Store current installment count on dropdown focus
  *
  * Saves the current value before user changes it, allowing
@@ -77,30 +109,29 @@ function dskapi_payment_pogasitelni_vnoski_input_change() {
 
   var dskapi_price = parseFloat(dskapi_price_el.value);
   var dskapi_cid_el = document.getElementById("dskapi_payment_cid");
-  var DSKAPI_LIVEURL_el = document.getElementById("dskapi_payment_LIVEURL");
+  var productApiUrlEl = document.getElementById(
+    "dskapi_payment_PRODUCT_API_URL",
+  );
   var dskapi_product_id_el = document.getElementById(
     "dskapi_payment_product_id",
   );
 
   // Validate required elements exist
-  if (!dskapi_cid_el || !DSKAPI_LIVEURL_el || !dskapi_product_id_el) return;
+  if (!dskapi_cid_el || !productApiUrlEl || !dskapi_product_id_el) return;
 
   var dskapi_cid = dskapi_cid_el.value;
-  var DSKAPI_LIVEURL = DSKAPI_LIVEURL_el.value;
   var dskapi_product_id = dskapi_product_id_el.value;
 
-  // Build API request URL
+  // Build API request URL (cached via shop module)
   var xmlhttpro = createCORSRequest(
     "GET",
-    DSKAPI_LIVEURL +
-      "/function/getproductcustom.php?cid=" +
-      dskapi_cid +
-      "&price=" +
-      dskapi_price +
-      "&product_id=" +
-      dskapi_product_id +
-      "&dskapi_vnoski=" +
+    dskapi_buildProductApiUrl(
+      productApiUrlEl.value,
+      dskapi_cid,
+      dskapi_price,
+      dskapi_product_id,
       dskapi_vnoski,
+    ),
   );
 
   xmlhttpro.onreadystatechange = function () {

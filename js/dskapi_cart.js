@@ -43,6 +43,38 @@ function createCORSRequest(method, url) {
 }
 
 /**
+ * Build cached product API URL (module proxy).
+ *
+ * @param {string} baseUrl
+ * @param {string} cid
+ * @param {number|string} price
+ * @param {number|string} productId
+ * @param {number|string} installments
+ * @returns {string}
+ */
+function dskapi_buildProductApiUrl(
+  baseUrl,
+  cid,
+  price,
+  productId,
+  installments,
+) {
+  var sep = baseUrl.indexOf("?") >= 0 ? "&" : "?";
+  return (
+    baseUrl +
+    sep +
+    "cid=" +
+    encodeURIComponent(cid) +
+    "&price=" +
+    encodeURIComponent(price) +
+    "&product_id=" +
+    encodeURIComponent(productId) +
+    "&dskapi_vnoski=" +
+    encodeURIComponent(installments)
+  );
+}
+
+/**
  * Store current installment count on dropdown focus
  *
  * Saves the current value before user changes it, allowing
@@ -68,7 +100,7 @@ function dskapi_pogasitelni_vnoski_input_change() {
   var vnoskiInput = document.getElementById("dskapi_pogasitelni_vnoski_input");
   var priceInput = document.getElementById("dskapi_price_txt");
   var cidInput = document.getElementById("dskapi_cid");
-  var urlInput = document.getElementById("DSKAPI_LIVEURL");
+  var urlInput = document.getElementById("DSKAPI_PRODUCT_API_URL");
   var productIdInput = document.getElementById("dskapi_product_id");
 
   // Validate required elements exist
@@ -85,21 +117,18 @@ function dskapi_pogasitelni_vnoski_input_change() {
   var dskapi_vnoski = parseFloat(vnoskiInput.value);
   var dskapi_price = parseFloat(priceInput.value);
   var dskapi_cid = cidInput.value;
-  var DSKAPI_LIVEURL = urlInput.value;
   var dskapi_product_id = productIdInput.value;
 
-  // Build API request URL
+  // Build API request URL (cached via shop module)
   var xmlhttpro = createCORSRequest(
     "GET",
-    DSKAPI_LIVEURL +
-      "/function/getproductcustom.php?cid=" +
-      dskapi_cid +
-      "&price=" +
-      dskapi_price +
-      "&product_id=" +
-      dskapi_product_id +
-      "&dskapi_vnoski=" +
+    dskapi_buildProductApiUrl(
+      urlInput.value,
+      dskapi_cid,
+      dskapi_price,
+      dskapi_product_id,
       dskapi_vnoski,
+    ),
   );
 
   if (!xmlhttpro) {

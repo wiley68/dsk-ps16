@@ -45,6 +45,7 @@
 <input type="hidden" id="dskapi_cid" value="{$dskapi_cid}" />
 <input type="hidden" id="dskapi_product_id" value="{$dskapi_product_id}" />
 <input type="hidden" id="DSKAPI_LIVEURL" value="{$DSKAPI_LIVEURL}" />
+<input type="hidden" id="DSKAPI_PRODUCT_API_URL" value="{$DSKAPI_PRODUCT_API_URL}" />
 <input type="hidden" id="dskapi_button_status" value="{$dskapi_button_status}" />
 <input type="hidden" id="dskapi_maxstojnost" value="{$dskapi_maxstojnost}" />
 <input type="hidden" id="dskapi_eur" value="{$dskapi_eur}" />

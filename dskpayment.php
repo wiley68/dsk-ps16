@@ -25,6 +25,7 @@ defined('_DB_PREFIX_') or define('_DB_PREFIX_', 'ps_');
 defined('_MYSQL_ENGINE_') or define('_MYSQL_ENGINE_', 'InnoDB');
 
 require_once __DIR__ . '/classes/DskPaymentOrder.php';
+require_once __DIR__ . '/classes/DskPaymentApiCache.php';
 
 /**
  * DSK Payment Module Class
@@ -240,6 +241,10 @@ class Dskpayment extends PaymentModule
             return false;
         }
 
+        if (!DskPaymentApiCache::ensureTable()) {
+            return false;
+        }
+
         return true;
     }
 
@@ -252,9 +257,22 @@ class Dskpayment extends PaymentModule
      */
     private function uninstallDb()
     {
-        $sql = "DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "dskpayment_orders`;";
         $db = Db::getInstance();
-        return (bool) $db->execute($sql);
+
+        return (bool) $db->execute("DROP TABLE IF EXISTS `" . _DB_PREFIX_ . "dskpayment_orders`;")
+            && (bool) $db->execute("DROP TABLE IF EXISTS `" . _DB_PREFIX_ . DskPaymentApiCache::TABLE . "`;");
+    }
+
+    /**
+     * Run schema updates when the module version changes.
+     *
+     * @param string $version
+     *
+     * @return bool
+     */
+    public function upgrade($version)
+    {
+        return DskPaymentApiCache::ensureTable();
     }
 
     /**
@@ -985,10 +1003,7 @@ class Dskpayment extends PaymentModule
                 break;
         }
 
-        $apiUrl = '/function/getproduct.php?cid=' . urlencode($dskapi_cid)
-            . '&price=' . urlencode((string) $dskapi_price)
-            . '&product_id=' . urlencode((string) $productId);
-        $paramsdskapi = $this->makeApiRequest($apiUrl);
+        $paramsdskapi = DskPaymentApiCache::fetchProduct($dskapi_cid, $productId, $dskapi_price, 0);
         if ($paramsdskapi === null) {
             return '';
         }
@@ -1051,6 +1066,7 @@ class Dskpayment extends PaymentModule
             'dskapi_cid' => $dskapi_cid,
             'dskapi_product_id' => $productId,
             'DSKAPI_LIVEURL' => DSKAPI_LIVEURL,
+            'DSKAPI_PRODUCT_API_URL' => $this->getProductApiUrl(),
             'dskapi_button_status' => $dskapi_button_status,
             'dskapi_maxstojnost' => (float) number_format((float) (isset($paramsdskapi['dsk_maxstojnost']) ? $paramsdskapi['dsk_maxstojnost'] : 0), 2, '.', ''),
             'dskapi_minstojnost' => (float) number_format((float) (isset($paramsdskapi['dsk_minstojnost']) ? $paramsdskapi['dsk_minstojnost'] : 0), 2, '.', ''),
@@ -1078,6 +1094,16 @@ class Dskpayment extends PaymentModule
         // PrestaShop 1.6.x uses display() instead of fetch()
         // Path is relative to module, not in 'module:' format
         return $this->display(__FILE__, $templatePath);
+    }
+
+    /**
+     * Front URL for cached product API (getproduct / getproductcustom proxy).
+     *
+     * @return string
+     */
+    private function getProductApiUrl()
+    {
+        return $this->context->link->getModuleLink($this->name, 'productapi', array(), true);
     }
 
     /**
