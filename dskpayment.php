@@ -410,7 +410,13 @@ class Dskpayment extends PaymentModule
     public function getContent()
     {
         $output = null;
-        if (Tools::isSubmit('submit' . $this->name)) {
+
+        if (Tools::isSubmit('submitClearDskpaymentCache')) {
+            $removed = (int) DskPaymentApiCache::clearAll();
+            $output .= $this->displayConfirmation(
+                sprintf($this->l('Кешът е изчистен. Премахнати са %d записа.'), $removed)
+            );
+        } elseif (Tools::isSubmit('submit' . $this->name)) {
             $dskapi_status = (int)Tools::getValue('dskapi_status');
             $dskapi_cid = (string)Tools::getValue('dskapi_cid');
             $dskapi_reklama = (int)Tools::getValue('dskapi_reklama');
@@ -509,8 +515,19 @@ class Dskpayment extends PaymentModule
             ),
             'submit' => array(
                 'title' => $this->l('Запиши'),
-                'class' => 'button'
-            )
+                'class' => 'btn btn-default pull-right',
+                'icon' => 'process-icon-save',
+            ),
+            'buttons' => array(
+                array(
+                    'type' => 'submit',
+                    'title' => $this->l('Изтрий кешираните данни'),
+                    'name' => 'submitClearDskpaymentCache',
+                    'id' => 'submit_clear_dskpayment_cache',
+                    'icon' => 'process-icon-delete',
+                    'class' => 'btn btn-default',
+                ),
+            ),
         );
 
         $helper = new HelperForm();
@@ -549,7 +566,47 @@ class Dskpayment extends PaymentModule
         $helper->fields_value['dskapi_reklama'] = Configuration::get('dskapi_reklama');
         $helper->fields_value['dskapi_gap'] = Configuration::get('dskapi_gap') == "" ? 0 : Configuration::get('dskapi_gap');
 
-        return $helper->generateForm($fields_form);
+        return $helper->generateForm($fields_form) . $this->renderClearCacheConfirmScript();
+    }
+
+    /**
+     * Confirm dialog before clearing the product API cache (BO module config).
+     *
+     * @return string
+     */
+    private function renderClearCacheConfirmScript()
+    {
+        $message = $this->l('Сигурни ли сте, че искате да изтриете всички кеширани изчисления за вноски?');
+
+        return '<script type="text/javascript">
+(function () {
+    var msg = ' . Tools::jsonEncode($message) . ';
+
+    function bindClearCacheConfirm() {
+        var btn = document.getElementById("submit_clear_dskpayment_cache")
+            || document.querySelector("button[name=\'submitClearDskpaymentCache\']");
+
+        if (!btn || btn.getAttribute("data-dsk-cache-confirm")) {
+            return;
+        }
+
+        btn.setAttribute("data-dsk-cache-confirm", "1");
+        btn.addEventListener("click", function (e) {
+            if (!confirm(msg)) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return false;
+            }
+        }, true);
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bindClearCacheConfirm);
+    } else {
+        bindClearCacheConfirm();
+    }
+})();
+</script>';
     }
 
     /**

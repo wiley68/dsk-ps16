@@ -193,6 +193,27 @@ class DskPaymentApiCache
     }
 
     /**
+     * Delete all cached API responses.
+     *
+     * @return int Number of removed rows
+     */
+    public static function clearAll()
+    {
+        if (!self::ensureTable()) {
+            return 0;
+        }
+
+        $table = _DB_PREFIX_ . self::TABLE;
+        $count = (int) Db::getInstance()->getValue('SELECT COUNT(*) FROM `' . $table . '`');
+
+        if ($count > 0) {
+            Db::getInstance()->execute('DELETE FROM `' . $table . '`');
+        }
+
+        return $count;
+    }
+
+    /**
      * @return bool
      */
     public static function purgeExpired()
