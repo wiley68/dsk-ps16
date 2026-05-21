@@ -193,6 +193,38 @@ class DskPaymentApiCache
     }
 
     /**
+     * Delete cached API responses for a store CID.
+     *
+     * @param string $cid
+     *
+     * @return int Number of removed rows
+     */
+    public static function deleteByCid($cid)
+    {
+        if (!self::ensureTable()) {
+            return 0;
+        }
+
+        $cid = (string) $cid;
+        if ($cid === '') {
+            return 0;
+        }
+
+        $table = _DB_PREFIX_ . self::TABLE;
+        $count = (int) Db::getInstance()->getValue(
+            'SELECT COUNT(*) FROM `' . $table . '` WHERE `cid` = \'' . pSQL($cid) . '\''
+        );
+
+        if ($count > 0) {
+            Db::getInstance()->execute(
+                'DELETE FROM `' . $table . '` WHERE `cid` = \'' . pSQL($cid) . '\''
+            );
+        }
+
+        return $count;
+    }
+
+    /**
      * Delete all cached API responses.
      *
      * @return int Number of removed rows
