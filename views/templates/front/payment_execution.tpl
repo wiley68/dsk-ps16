@@ -5,7 +5,7 @@
     * @Publisher: Avalon Ltd
     * @Publisher e-mail: home@avalonbg.com
     * @Owner: Банка ДСК
-    * @Version: 1.2.1
+    * @Version: 1.2.2
 *}
 {capture name=path}
     <a href="{$link->getPageLink('order', true, NULL, "step=3")|escape:'html':'UTF-8'}" title="{l s='Обратно към методи на плащане' mod='dskpayment'}">{l s='Методи на плащане' mod='dskpayment'}</a><span class="navigation-pipe">{$navigationPipe}</span>{l s='Банка ДСК покупки на Кредит' mod='dskpayment'}

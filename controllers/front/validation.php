@@ -17,7 +17,7 @@
  * @Publisher: Avalon Ltd
  * @Publisher e-mail: home@avalonbg.com
  * @Owner: Банка ДСК
- * @Version: 1.2.1
+ * @Version: 1.2.2
  * @since 1.2.1
  */
 class DskpaymentValidationModuleFrontController extends ModuleFrontController

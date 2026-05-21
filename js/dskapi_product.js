@@ -9,7 +9,7 @@
  * @author Ilko Ivanov
  * @publisher Avalon Ltd
  * @owner Банка ДСК
- * @version 1.2.1
+ * @version 1.2.2
  *
  * Compatible with PrestaShop 1.6.x
  */
@@ -32,9 +32,9 @@ var old_vnoski;
  */
 function createCORSRequest(method, url) {
   var xhr = new XMLHttpRequest();
-  if ('withCredentials' in xhr) {
+  if ("withCredentials" in xhr) {
     xhr.open(method, url, true);
-  } else if (typeof XDomainRequest != 'undefined') {
+  } else if (typeof XDomainRequest != "undefined") {
     xhr = new XDomainRequest();
     xhr.open(method, url);
   } else {
@@ -67,7 +67,7 @@ function dskapi_pogasitelni_vnoski_input_focus(_old_vnoski) {
  */
 function dskapi_pogasitelni_vnoski_input_change() {
   var dskapi_vnoski_input = document.getElementById(
-    'dskapi_pogasitelni_vnoski_input'
+    "dskapi_pogasitelni_vnoski_input",
   );
   if (!dskapi_vnoski_input) {
     return;
@@ -76,11 +76,11 @@ function dskapi_pogasitelni_vnoski_input_change() {
   var dskapi_vnoski = parseFloat(dskapi_vnoski_input.value);
 
   // Try to get price from dskapi_price_txt first, fallback to dskapi_price
-  var dskapi_price_el = document.getElementById('dskapi_price_txt');
+  var dskapi_price_el = document.getElementById("dskapi_price_txt");
   var dskapi_price = dskapi_price_el ? parseFloat(dskapi_price_el.value) : null;
 
   if (!dskapi_price || isNaN(dskapi_price)) {
-    var dskapi_price_hidden = document.getElementById('dskapi_price');
+    var dskapi_price_hidden = document.getElementById("dskapi_price");
     if (dskapi_price_hidden) {
       dskapi_price = parseFloat(dskapi_price_hidden.value);
     }
@@ -90,9 +90,9 @@ function dskapi_pogasitelni_vnoski_input_change() {
     return;
   }
 
-  var dskapi_cid = document.getElementById('dskapi_cid');
-  var DSKAPI_LIVEURL = document.getElementById('DSKAPI_LIVEURL');
-  var dskapi_product_id = document.getElementById('dskapi_product_id');
+  var dskapi_cid = document.getElementById("dskapi_cid");
+  var DSKAPI_LIVEURL = document.getElementById("DSKAPI_LIVEURL");
+  var dskapi_product_id = document.getElementById("dskapi_product_id");
 
   // Validate required elements exist
   if (!dskapi_cid || !DSKAPI_LIVEURL || !dskapi_product_id) {
@@ -101,16 +101,16 @@ function dskapi_pogasitelni_vnoski_input_change() {
 
   // Build API request URL
   var xmlhttpro = createCORSRequest(
-    'GET',
+    "GET",
     DSKAPI_LIVEURL.value +
-      '/function/getproductcustom.php?cid=' +
+      "/function/getproductcustom.php?cid=" +
       dskapi_cid.value +
-      '&price=' +
+      "&price=" +
       dskapi_price +
-      '&product_id=' +
+      "&product_id=" +
       dskapi_product_id.value +
-      '&dskapi_vnoski=' +
-      dskapi_vnoski
+      "&dskapi_vnoski=" +
+      dskapi_vnoski,
   );
 
   if (!xmlhttpro) {
@@ -125,16 +125,17 @@ function dskapi_pogasitelni_vnoski_input_change() {
         var dsk_vnoska = parseFloat(response.dsk_vnoska);
         var dsk_gpr = parseFloat(response.dsk_gpr);
         var dsk_is_visible = response.dsk_is_visible;
-        var dskapi_vnoski_txt = document.getElementById('dskapi_vnoski_txt');
+        var dskapi_vnoski_txt = document.getElementById("dskapi_vnoski_txt");
 
         if (dsk_is_visible) {
           if (options) {
             // Update popup fields with new values
-            var dskapi_vnoska_input = document.getElementById('dskapi_vnoska');
-            var dskapi_vnoska_txt = document.getElementById('dskapi_vnoska_txt');
-            var dskapi_gpr = document.getElementById('dskapi_gpr');
+            var dskapi_vnoska_input = document.getElementById("dskapi_vnoska");
+            var dskapi_vnoska_txt =
+              document.getElementById("dskapi_vnoska_txt");
+            var dskapi_gpr = document.getElementById("dskapi_gpr");
             var dskapi_obshtozaplashtane_input = document.getElementById(
-              'dskapi_obshtozaplashtane'
+              "dskapi_obshtozaplashtane",
             );
 
             if (dskapi_vnoska_input) {
@@ -157,7 +158,7 @@ function dskapi_pogasitelni_vnoski_input_change() {
             }
           } else {
             // Selected installment count is below minimum
-            alert('Избраният брой погасителни вноски е под минималния.');
+            alert("Избраният брой погасителни вноски е под минималния.");
             dskapi_vnoski_input.value = old_vnoski;
             if (dskapi_vnoski_txt) {
               dskapi_vnoski_txt.innerHTML = old_vnoski;
@@ -165,14 +166,14 @@ function dskapi_pogasitelni_vnoski_input_change() {
           }
         } else {
           // Selected installment count exceeds maximum
-          alert('Избраният брой погасителни вноски е над максималния.');
+          alert("Избраният брой погасителни вноски е над максималния.");
           dskapi_vnoski_input.value = old_vnoski;
           if (dskapi_vnoski_txt) {
             dskapi_vnoski_txt.innerHTML = old_vnoski;
           }
         }
       } catch (e) {
-        console.error('DSK API Error:', e);
+        console.error("DSK API Error:", e);
       }
     }
   };
@@ -196,20 +197,20 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
   var dskapi_price1;
 
   // Attempt 1: #our_price_display (standard for PS 1.6.x)
-  var priceEl = document.getElementById('our_price_display');
+  var priceEl = document.getElementById("our_price_display");
   if (priceEl) {
     var priceText = priceEl.textContent || priceEl.innerText;
-    dskapi_price1 = priceText.replace(/[^\d,.]/g, '').replace(',', '.');
+    dskapi_price1 = priceText.replace(/[^\d,.]/g, "").replace(",", ".");
   }
 
   // Attempt 2: span.price (attribute or text)
   if (!dskapi_price1) {
     priceEl = document.querySelector('span.price[itemprop="price"]');
     if (priceEl) {
-      dskapi_price1 = priceEl.getAttribute('content');
+      dskapi_price1 = priceEl.getAttribute("content");
       if (!dskapi_price1) {
         var priceText2 = priceEl.textContent || priceEl.innerText;
-        dskapi_price1 = priceText2.replace(/[^\d,.]/g, '').replace(',', '.');
+        dskapi_price1 = priceText2.replace(/[^\d,.]/g, "").replace(",", ".");
       }
     }
   }
@@ -218,17 +219,17 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
   if (!dskapi_price1) {
     priceEl = document.querySelector('[itemprop="price"]');
     if (priceEl) {
-      dskapi_price1 = priceEl.getAttribute('content');
+      dskapi_price1 = priceEl.getAttribute("content");
       if (!dskapi_price1) {
         var priceText3 = priceEl.textContent || priceEl.innerText;
-        dskapi_price1 = priceText3.replace(/[^\d,.]/g, '').replace(',', '.');
+        dskapi_price1 = priceText3.replace(/[^\d,.]/g, "").replace(",", ".");
       }
     }
   }
 
   // If price not found, use value from hidden field
   if (!dskapi_price1) {
-    var dskapi_price = document.getElementById('dskapi_price');
+    var dskapi_price = document.getElementById("dskapi_price");
     if (dskapi_price) {
       dskapi_price1 = dskapi_price.value;
     } else {
@@ -238,11 +239,11 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
 
   // Get quantity
   var dskapi_quantity = 1;
-  var qtyInput = document.getElementById('quantity_wanted');
+  var qtyInput = document.getElementById("quantity_wanted");
   if (qtyInput) {
     dskapi_quantity = parseFloat(qtyInput.value) || 1;
   } else {
-    var qtyInputs = document.getElementsByName('qty');
+    var qtyInputs = document.getElementsByName("qty");
     if (qtyInputs && qtyInputs.length > 0) {
       dskapi_quantity = parseFloat(qtyInputs[0].value) || 1;
     }
@@ -252,8 +253,8 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
   var dskapi_priceall = parseFloat(dskapi_price1) * dskapi_quantity;
 
   // Apply currency conversion if needed
-  var dskapi_eur_el = document.getElementById('dskapi_eur');
-  var dskapi_currency_code_el = document.getElementById('dskapi_currency_code');
+  var dskapi_eur_el = document.getElementById("dskapi_eur");
+  var dskapi_currency_code_el = document.getElementById("dskapi_currency_code");
 
   if (dskapi_eur_el && dskapi_currency_code_el) {
     var dskapi_eur = parseInt(dskapi_eur_el.value) || 0;
@@ -265,14 +266,14 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
         break;
       case 1:
         // Convert EUR to BGN
-        if (dskapi_currency_code == 'EUR') {
+        if (dskapi_currency_code == "EUR") {
           dskapi_priceall = dskapi_priceall * 1.95583;
         }
         break;
       case 2:
       case 3:
         // Convert BGN to EUR
-        if (dskapi_currency_code == 'BGN') {
+        if (dskapi_currency_code == "BGN") {
           dskapi_priceall = dskapi_priceall / 1.95583;
         }
         break;
@@ -280,15 +281,15 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
   }
 
   // Store calculated price in dskapi_price_txt
-  var dskapi_price_txt = document.getElementById('dskapi_price_txt');
+  var dskapi_price_txt = document.getElementById("dskapi_price_txt");
   if (dskapi_price_txt) {
     dskapi_price_txt.value = dskapi_priceall.toFixed(2);
   }
 
   // Check maximum allowed value
-  var dskapi_maxstojnost = document.getElementById('dskapi_maxstojnost');
+  var dskapi_maxstojnost = document.getElementById("dskapi_maxstojnost");
   var dskapiProductPopupContainer = document.getElementById(
-    'dskapi-product-popup-container'
+    "dskapi-product-popup-container",
   );
 
   if (!dskapi_maxstojnost) {
@@ -305,15 +306,15 @@ function dskapi_calculateAndUpdateProductPrice(showPopup) {
 
     // If showPopup is true and popup exists, display it
     if (showPopup && dskapiProductPopupContainer) {
-      dskapiProductPopupContainer.style.display = 'block';
+      dskapiProductPopupContainer.style.display = "block";
     }
   } else {
     // If price exceeds maximum and showPopup is true, show alert
     if (showPopup) {
       alert(
-        'Максимално позволената цена за кредит ' +
+        "Максимално позволената цена за кредит " +
           maxPrice.toFixed(2) +
-          ' е надвишена!'
+          " е надвишена!",
       );
     }
   }
@@ -332,11 +333,11 @@ function dskapi_setCookie(name, value, days) {
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
   document.cookie =
     name +
-    '=' +
+    "=" +
     value +
-    ';expires=' +
+    ";expires=" +
     expires.toUTCString() +
-    ';path=/;SameSite=Lax';
+    ";path=/;SameSite=Lax";
 }
 
 /**
@@ -352,19 +353,19 @@ function dskapi_setCookie(name, value, days) {
  */
 function dskapi_addToCartAndRedirectToCheckout() {
   // Save payment method selection in cookie (valid for 1 hour)
-  dskapi_setCookie('dskpayment_selected', '1', 1 / 24);
+  dskapi_setCookie("dskpayment_selected", "1", 1 / 24);
 
   // Get URL to DSK payment controller
-  var checkoutUrlEl = document.getElementById('dskapi_checkout_url');
-  var checkoutUrl = checkoutUrlEl ? checkoutUrlEl.value : '';
+  var checkoutUrlEl = document.getElementById("dskapi_checkout_url");
+  var checkoutUrl = checkoutUrlEl ? checkoutUrlEl.value : "";
 
   // Get id_product from page
-  var idProductEl = document.getElementById('product_page_product_id');
+  var idProductEl = document.getElementById("product_page_product_id");
   var idProduct = idProductEl ? idProductEl.value : null;
 
   // Fallback: try from dskapi_product_id
   if (!idProduct) {
-    var dskapiProductId = document.getElementById('dskapi_product_id');
+    var dskapiProductId = document.getElementById("dskapi_product_id");
     idProduct = dskapiProductId ? dskapiProductId.value : null;
   }
 
@@ -377,7 +378,7 @@ function dskapi_addToCartAndRedirectToCheckout() {
   }
 
   if (!idProduct) {
-    console.error('DSK Payment: Cannot find product ID');
+    console.error("DSK Payment: Cannot find product ID");
     if (checkoutUrl) {
       window.location.href = checkoutUrl;
     }
@@ -386,14 +387,14 @@ function dskapi_addToCartAndRedirectToCheckout() {
 
   // Get quantity
   var quantity = 1;
-  var qtyInput = document.getElementById('quantity_wanted');
+  var qtyInput = document.getElementById("quantity_wanted");
   if (qtyInput) {
     quantity = parseInt(qtyInput.value) || 1;
   }
 
   // Get id_product_attribute if combination is selected
   var idProductAttribute = 0;
-  var ipaInput = document.getElementById('idCombination');
+  var ipaInput = document.getElementById("idCombination");
   if (ipaInput) {
     idProductAttribute = parseInt(ipaInput.value) || 0;
   }
@@ -406,13 +407,13 @@ function dskapi_addToCartAndRedirectToCheckout() {
   }
 
   // Get static_token for CSRF protection (PrestaShop 1.6.x)
-  var staticToken = '';
+  var staticToken = "";
   var tokenInput = document.querySelector('input[name="token"]');
   if (tokenInput) {
     staticToken = tokenInput.value;
   }
   // Fallback: global variable
-  if (!staticToken && typeof static_token !== 'undefined') {
+  if (!staticToken && typeof static_token !== "undefined") {
     staticToken = static_token;
   }
 
@@ -425,26 +426,31 @@ function dskapi_addToCartAndRedirectToCheckout() {
 
   // Silent add-to-cart via direct AJAX request
   // We don't use ajaxCart.add() because it shows a popup
-  var ajaxUrl = '';
-  if (typeof baseDir !== 'undefined') {
-    ajaxUrl = baseDir + 'index.php';
-  } else if (typeof baseUri !== 'undefined') {
-    ajaxUrl = baseUri + 'index.php';
+  var ajaxUrl = "";
+  if (typeof baseDir !== "undefined") {
+    ajaxUrl = baseDir + "index.php";
+  } else if (typeof baseUri !== "undefined") {
+    ajaxUrl = baseUri + "index.php";
   } else {
     // Fallback: extract from current URL
-    ajaxUrl = window.location.protocol + '//' + window.location.host + '/index.php';
+    ajaxUrl =
+      window.location.protocol + "//" + window.location.host + "/index.php";
   }
 
   var params =
-    'controller=cart&add=1&ajax=true' +
-    '&id_product=' + idProduct +
-    '&qty=' + quantity +
-    '&id_product_attribute=' + idProductAttribute +
-    '&token=' + staticToken;
+    "controller=cart&add=1&ajax=true" +
+    "&id_product=" +
+    idProduct +
+    "&qty=" +
+    quantity +
+    "&id_product_attribute=" +
+    idProductAttribute +
+    "&token=" +
+    staticToken;
 
   var xhr = new XMLHttpRequest();
-  xhr.open('POST', ajaxUrl, true);
-  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  xhr.open("POST", ajaxUrl, true);
+  xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
   xhr.onreadystatechange = function () {
     if (xhr.readyState === 4) {
@@ -453,7 +459,7 @@ function dskapi_addToCartAndRedirectToCheckout() {
         doRedirect();
       } else {
         // On error - still try redirect (product may already be in cart)
-        console.warn('DSK Payment: AJAX response status ' + xhr.status);
+        console.warn("DSK Payment: AJAX response status " + xhr.status);
         doRedirect();
       }
     }
@@ -461,7 +467,7 @@ function dskapi_addToCartAndRedirectToCheckout() {
 
   xhr.onerror = function () {
     // On network error - still redirect
-    console.error('DSK Payment: Network error when adding to cart');
+    console.error("DSK Payment: Network error when adding to cart");
     doRedirect();
   };
 
@@ -486,21 +492,26 @@ function dskapi_addToCartAndRedirectToCheckout() {
  * @returns {void}
  */
 function initDskapiWidget() {
-  var btn_dskapi = document.getElementById('btn_dskapi');
+  var btn_dskapi = document.getElementById("btn_dskapi");
 
-  if (btn_dskapi !== null && btn_dskapi.getAttribute('data-dskapi-bound') !== '1') {
-    btn_dskapi.setAttribute('data-dskapi-bound', '1');
+  if (
+    btn_dskapi !== null &&
+    btn_dskapi.getAttribute("data-dskapi-bound") !== "1"
+  ) {
+    btn_dskapi.setAttribute("data-dskapi-bound", "1");
 
-    var dskapi_button_status_el = document.getElementById('dskapi_button_status');
+    var dskapi_button_status_el = document.getElementById(
+      "dskapi_button_status",
+    );
     var dskapi_button_status = dskapi_button_status_el
       ? parseInt(dskapi_button_status_el.value)
       : 0;
 
     var dskapiProductPopupContainer = document.getElementById(
-      'dskapi-product-popup-container'
+      "dskapi-product-popup-container",
     );
-    var dskapi_back_credit = document.getElementById('dskapi_back_credit');
-    var dskapi_buy_credit = document.getElementById('dskapi_buy_credit');
+    var dskapi_back_credit = document.getElementById("dskapi_back_credit");
+    var dskapi_buy_credit = document.getElementById("dskapi_buy_credit");
 
     // Main button - open popup or direct add-to-cart
     btn_dskapi.onclick = function (event) {
@@ -520,7 +531,7 @@ function initDskapiWidget() {
       dskapi_back_credit.onclick = function (event) {
         event.preventDefault();
         if (dskapiProductPopupContainer) {
-          dskapiProductPopupContainer.style.display = 'none';
+          dskapiProductPopupContainer.style.display = "none";
         }
         return false;
       };
@@ -531,7 +542,7 @@ function initDskapiWidget() {
       dskapi_buy_credit.onclick = function (event) {
         event.preventDefault();
         if (dskapiProductPopupContainer) {
-          dskapiProductPopupContainer.style.display = 'none';
+          dskapiProductPopupContainer.style.display = "none";
         }
         dskapi_addToCartAndRedirectToCheckout();
         return false;
@@ -539,7 +550,7 @@ function initDskapiWidget() {
     }
 
     // Listen for quantity changes
-    var qtyInput = document.getElementById('quantity_wanted');
+    var qtyInput = document.getElementById("quantity_wanted");
     if (qtyInput) {
       qtyInput.onchange = function () {
         dskapi_calculateAndUpdateProductPrice(false);
@@ -550,30 +561,34 @@ function initDskapiWidget() {
     }
 
     // PrestaShop 1.6.x: Listen for combination changes via jQuery
-    if (typeof jQuery !== 'undefined') {
-      jQuery(document).on('change', '.attribute_select, .attribute_radio', function () {
-        // Wait for PrestaShop to update the price
-        setTimeout(function () {
-          dskapi_calculateAndUpdateProductPrice(false);
-        }, 300);
-      });
+    if (typeof jQuery !== "undefined") {
+      jQuery(document).on(
+        "change",
+        ".attribute_select, .attribute_radio",
+        function () {
+          // Wait for PrestaShop to update the price
+          setTimeout(function () {
+            dskapi_calculateAndUpdateProductPrice(false);
+          }, 300);
+        },
+      );
 
       // PrestaShop 1.6: color swatches are <a class="color_pick"> (no change on select/radio)
-      jQuery(document).on('click', '.color_pick', function () {
+      jQuery(document).on("click", ".color_pick", function () {
         setTimeout(function () {
           dskapi_calculateAndUpdateProductPrice(false);
         }, 300);
       });
-      jQuery(document).on('change', '.color_pick_hidden', function () {
+      jQuery(document).on("change", ".color_pick_hidden", function () {
         setTimeout(function () {
           dskapi_calculateAndUpdateProductPrice(false);
         }, 300);
       });
 
       // Listen for findCombination callback (if theme uses it)
-      if (typeof combinationsPrices !== 'undefined') {
+      if (typeof combinationsPrices !== "undefined") {
         var originalFindCombination = window.findCombination;
-        if (typeof originalFindCombination === 'function') {
+        if (typeof originalFindCombination === "function") {
           window.findCombination = function () {
             originalFindCombination.apply(this, arguments);
             setTimeout(function () {
@@ -593,21 +608,21 @@ function initDskapiWidget() {
 
 // Initialize on page load
 // PrestaShop 1.6.x uses jQuery
-if (typeof jQuery !== 'undefined') {
+if (typeof jQuery !== "undefined") {
   jQuery(document).ready(function () {
     initDskapiWidget();
   });
 } else {
   // Fallback without jQuery
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initDskapiWidget);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initDskapiWidget);
   } else {
     initDskapiWidget();
   }
 }
 
 // Additional fallback on window load
-if (typeof jQuery !== 'undefined') {
+if (typeof jQuery !== "undefined") {
   jQuery(window).load(function () {
     setTimeout(initDskapiWidget, 200);
   });

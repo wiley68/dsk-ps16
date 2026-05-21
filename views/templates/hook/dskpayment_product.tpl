@@ -5,7 +5,7 @@
     * @Publisher: Avalon Ltd
     * @Publisher e-mail: home@avalonbg.com
     * @Owner: Банка ДСК
-    * @Version: 1.2.1
+    * @Version: 1.2.2
 *}
 <div id="dskapi-product-button-container" {if $dskapi_gap > 0}style="margin-top:{$dskapi_gap}px;" {/if}>
     <table class="dskapi_table">

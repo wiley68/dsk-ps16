@@ -5,7 +5,7 @@
  *
  * @file dskapi_admin.js
  * @author Ilko Ivanov
- * @version 1.2.1
+ * @version 1.2.2
  */
 
 /**
@@ -17,6 +17,6 @@
  * @returns {void}
  */
 function show_dskapi_all_orders() {
-    var dskapi_orders_div = document.getElementById("dskapi_orders_div");
-    dskapi_orders_div.style.display = "block";
+  var dskapi_orders_div = document.getElementById("dskapi_orders_div");
+  dskapi_orders_div.style.display = "block";
 }

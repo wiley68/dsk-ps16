@@ -8,7 +8,7 @@
  * @author Ilko Ivanov
  * @publisher Avalon Ltd
  * @owner Банка ДСК
- * @version 1.2.1
+ * @version 1.2.2
  *
  * Compatible with PrestaShop 1.6.x
  */
@@ -31,9 +31,9 @@ var old_vnoski;
  */
 function createCORSRequest(method, url) {
   var xhr = new XMLHttpRequest();
-  if ('withCredentials' in xhr) {
+  if ("withCredentials" in xhr) {
     xhr.open(method, url, true);
-  } else if (typeof XDomainRequest != 'undefined') {
+  } else if (typeof XDomainRequest != "undefined") {
     xhr = new XDomainRequest();
     xhr.open(method, url);
   } else {
@@ -65,14 +65,20 @@ function dskapi_pogasitelni_vnoski_input_focus(_old_vnoski) {
  * @returns {void}
  */
 function dskapi_pogasitelni_vnoski_input_change() {
-  var vnoskiInput = document.getElementById('dskapi_pogasitelni_vnoski_input');
-  var priceInput = document.getElementById('dskapi_price_txt');
-  var cidInput = document.getElementById('dskapi_cid');
-  var urlInput = document.getElementById('DSKAPI_LIVEURL');
-  var productIdInput = document.getElementById('dskapi_product_id');
+  var vnoskiInput = document.getElementById("dskapi_pogasitelni_vnoski_input");
+  var priceInput = document.getElementById("dskapi_price_txt");
+  var cidInput = document.getElementById("dskapi_cid");
+  var urlInput = document.getElementById("DSKAPI_LIVEURL");
+  var productIdInput = document.getElementById("dskapi_product_id");
 
   // Validate required elements exist
-  if (!vnoskiInput || !priceInput || !cidInput || !urlInput || !productIdInput) {
+  if (
+    !vnoskiInput ||
+    !priceInput ||
+    !cidInput ||
+    !urlInput ||
+    !productIdInput
+  ) {
     return;
   }
 
@@ -84,16 +90,16 @@ function dskapi_pogasitelni_vnoski_input_change() {
 
   // Build API request URL
   var xmlhttpro = createCORSRequest(
-    'GET',
+    "GET",
     DSKAPI_LIVEURL +
-      '/function/getproductcustom.php?cid=' +
+      "/function/getproductcustom.php?cid=" +
       dskapi_cid +
-      '&price=' +
+      "&price=" +
       dskapi_price +
-      '&product_id=' +
+      "&product_id=" +
       dskapi_product_id +
-      '&dskapi_vnoski=' +
-      dskapi_vnoski
+      "&dskapi_vnoski=" +
+      dskapi_vnoski,
   );
 
   if (!xmlhttpro) {
@@ -112,11 +118,15 @@ function dskapi_pogasitelni_vnoski_input_change() {
         if (dsk_is_visible) {
           if (options) {
             // Update popup fields with new values
-            var dskapi_vnoska_input = document.getElementById('dskapi_vnoska');
-            var dskapi_vnoski_txt = document.getElementById('dskapi_vnoski_txt');
-            var dskapi_vnoska_txt = document.getElementById('dskapi_vnoska_txt');
-            var dskapi_gpr = document.getElementById('dskapi_gpr');
-            var dskapi_obshtozaplashtane_input = document.getElementById('dskapi_obshtozaplashtane');
+            var dskapi_vnoska_input = document.getElementById("dskapi_vnoska");
+            var dskapi_vnoski_txt =
+              document.getElementById("dskapi_vnoski_txt");
+            var dskapi_vnoska_txt =
+              document.getElementById("dskapi_vnoska_txt");
+            var dskapi_gpr = document.getElementById("dskapi_gpr");
+            var dskapi_obshtozaplashtane_input = document.getElementById(
+              "dskapi_obshtozaplashtane",
+            );
 
             if (dskapi_vnoska_input) {
               dskapi_vnoska_input.value = dsk_vnoska.toFixed(2);
@@ -131,21 +141,23 @@ function dskapi_pogasitelni_vnoski_input_change() {
               dskapi_gpr.value = dsk_gpr.toFixed(2);
             }
             if (dskapi_obshtozaplashtane_input) {
-              dskapi_obshtozaplashtane_input.value = (dsk_vnoska * dskapi_vnoski).toFixed(2);
+              dskapi_obshtozaplashtane_input.value = (
+                dsk_vnoska * dskapi_vnoski
+              ).toFixed(2);
             }
             old_vnoski = dskapi_vnoski;
           } else {
             // Selected installment count is below minimum
-            alert('Избраният брой погасителни вноски е под минималния.');
+            alert("Избраният брой погасителни вноски е под минималния.");
             vnoskiInput.value = old_vnoski;
           }
         } else {
           // Selected installment count exceeds maximum
-          alert('Избраният брой погасителни вноски е над максималния.');
+          alert("Избраният брой погасителни вноски е над максималния.");
           vnoskiInput.value = old_vnoski;
         }
       } catch (e) {
-        console.error('DSK API Error:', e);
+        console.error("DSK API Error:", e);
       }
     }
   };
@@ -165,11 +177,11 @@ function dskapi_cart_setCookie(name, value, days) {
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
   document.cookie =
     name +
-    '=' +
+    "=" +
     value +
-    ';expires=' +
+    ";expires=" +
     expires.toUTCString() +
-    ';path=/;SameSite=Lax';
+    ";path=/;SameSite=Lax";
 }
 
 /**
@@ -183,10 +195,10 @@ function dskapi_cart_setCookie(name, value, days) {
  */
 function dskapi_redirectToCheckoutWithPaymentMethod() {
   // Save payment method selection in cookie (valid for 1 hour)
-  dskapi_cart_setCookie('dskpayment_selected', '1', 1 / 24);
+  dskapi_cart_setCookie("dskpayment_selected", "1", 1 / 24);
 
   // Redirect directly to DSK payment controller
-  var checkoutUrl = document.getElementById('dskapi_checkout_url');
+  var checkoutUrl = document.getElementById("dskapi_checkout_url");
   if (checkoutUrl && checkoutUrl.value) {
     window.location.href = checkoutUrl.value;
   }
@@ -212,19 +224,19 @@ function initDskapiCartWidget() {
   if (!dskapiBuyCreditHandlerBound) {
     dskapiBuyCreditHandlerBound = true;
     document.addEventListener(
-      'click',
+      "click",
       function (event) {
         var target = event.target;
         // Check if click is on the button or its child elements
         var isBuyCredit = false;
         if (target) {
-          if (target.id === 'dskapi_buy_credit') {
+          if (target.id === "dskapi_buy_credit") {
             isBuyCredit = true;
           } else {
             // Check parent elements
             var parent = target.parentElement;
             while (parent) {
-              if (parent.id === 'dskapi_buy_credit') {
+              if (parent.id === "dskapi_buy_credit") {
                 isBuyCredit = true;
                 break;
               }
@@ -238,41 +250,50 @@ function initDskapiCartWidget() {
           event.stopPropagation();
 
           // Hide popup before redirect
-          var dskapiProductPopupContainer = document.getElementById('dskapi-product-popup-container');
+          var dskapiProductPopupContainer = document.getElementById(
+            "dskapi-product-popup-container",
+          );
           if (dskapiProductPopupContainer) {
-            dskapiProductPopupContainer.style.display = 'none';
+            dskapiProductPopupContainer.style.display = "none";
           }
 
           dskapi_redirectToCheckoutWithPaymentMethod();
           return false;
         }
       },
-      true
+      true,
     );
   }
 
   // Set cursor style on button if it exists
-  var dskapi_buy_credit = document.getElementById('dskapi_buy_credit');
+  var dskapi_buy_credit = document.getElementById("dskapi_buy_credit");
   if (dskapi_buy_credit !== null) {
-    dskapi_buy_credit.style.cursor = 'pointer';
+    dskapi_buy_credit.style.cursor = "pointer";
   }
 
   // Initialize main DSK button
-  var btn_dskapi = document.getElementById('btn_dskapi');
-  if (btn_dskapi !== null && btn_dskapi.getAttribute('data-dskapi-bound') !== '1') {
-    btn_dskapi.setAttribute('data-dskapi-bound', '1');
+  var btn_dskapi = document.getElementById("btn_dskapi");
+  if (
+    btn_dskapi !== null &&
+    btn_dskapi.getAttribute("data-dskapi-bound") !== "1"
+  ) {
+    btn_dskapi.setAttribute("data-dskapi-bound", "1");
 
-    var dskapi_button_status_el = document.getElementById('dskapi_button_status');
+    var dskapi_button_status_el = document.getElementById(
+      "dskapi_button_status",
+    );
     if (!dskapi_button_status_el) {
       return;
     }
 
     var dskapi_button_status = parseInt(dskapi_button_status_el.value) || 0;
-    var dskapiProductPopupContainer = document.getElementById('dskapi-product-popup-container');
-    var dskapi_back_credit = document.getElementById('dskapi_back_credit');
+    var dskapiProductPopupContainer = document.getElementById(
+      "dskapi-product-popup-container",
+    );
+    var dskapi_back_credit = document.getElementById("dskapi_back_credit");
 
-    var dskapi_price = document.getElementById('dskapi_price');
-    var dskapi_maxstojnost = document.getElementById('dskapi_maxstojnost');
+    var dskapi_price = document.getElementById("dskapi_price");
+    var dskapi_maxstojnost = document.getElementById("dskapi_maxstojnost");
 
     if (!dskapi_price || !dskapi_maxstojnost) {
       return;
@@ -293,8 +314,10 @@ function initDskapiCartWidget() {
         return false;
       } else {
         // Popup mode - show interest rates popup
-        var dskapi_eur_el = document.getElementById('dskapi_eur');
-        var dskapi_currency_code_el = document.getElementById('dskapi_currency_code');
+        var dskapi_eur_el = document.getElementById("dskapi_eur");
+        var dskapi_currency_code_el = document.getElementById(
+          "dskapi_currency_code",
+        );
 
         if (!dskapi_eur_el || !dskapi_currency_code_el) {
           return false;
@@ -310,21 +333,21 @@ function initDskapiCartWidget() {
             break;
           case 1:
             // Convert EUR to BGN
-            if (dskapi_currency_code == 'EUR') {
+            if (dskapi_currency_code == "EUR") {
               dskapi_priceall = dskapi_priceall * 1.95583;
             }
             break;
           case 2:
           case 3:
             // Convert BGN to EUR
-            if (dskapi_currency_code == 'BGN') {
+            if (dskapi_currency_code == "BGN") {
               dskapi_priceall = dskapi_priceall / 1.95583;
             }
             break;
         }
 
         // Update price display
-        var dskapi_price_txt = document.getElementById('dskapi_price_txt');
+        var dskapi_price_txt = document.getElementById("dskapi_price_txt");
         if (dskapi_price_txt) {
           dskapi_price_txt.value = dskapi_priceall.toFixed(2);
         }
@@ -332,14 +355,14 @@ function initDskapiCartWidget() {
         // Check if price is within allowed limit
         if (dskapi_priceall <= parseFloat(dskapi_maxstojnost.value)) {
           if (dskapiProductPopupContainer) {
-            dskapiProductPopupContainer.style.display = 'block';
+            dskapiProductPopupContainer.style.display = "block";
             dskapi_pogasitelni_vnoski_input_change();
           }
         } else {
           alert(
-            'Максимално позволената цена за кредит ' +
+            "Максимално позволената цена за кредит " +
               parseFloat(dskapi_maxstojnost.value).toFixed(2) +
-              ' е надвишена!'
+              " е надвишена!",
           );
         }
       }
@@ -351,7 +374,7 @@ function initDskapiCartWidget() {
       dskapi_back_credit.onclick = function (event) {
         event.preventDefault();
         if (dskapiProductPopupContainer) {
-          dskapiProductPopupContainer.style.display = 'none';
+          dskapiProductPopupContainer.style.display = "none";
         }
         return false;
       };
@@ -375,9 +398,9 @@ function initDskapiCartWidgetWithRetry() {
     attempts++;
 
     // Check if any DSK elements exist
-    var btn_dskapi = document.getElementById('btn_dskapi');
-    var dskapi_buy_credit = document.getElementById('dskapi_buy_credit');
-    var dskapi_button_status = document.getElementById('dskapi_button_status');
+    var btn_dskapi = document.getElementById("btn_dskapi");
+    var dskapi_buy_credit = document.getElementById("dskapi_buy_credit");
+    var dskapi_button_status = document.getElementById("dskapi_button_status");
 
     if (btn_dskapi || dskapi_buy_credit || dskapi_button_status) {
       initDskapiCartWidget();
@@ -391,8 +414,8 @@ function initDskapiCartWidgetWithRetry() {
 }
 
 // Initialize on DOM ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', function () {
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", function () {
     initDskapiCartWidgetWithRetry();
   });
 } else {
@@ -400,7 +423,7 @@ if (document.readyState === 'loading') {
 }
 
 // Additional initialization on full page load
-if (typeof jQuery !== 'undefined') {
+if (typeof jQuery !== "undefined") {
   jQuery(window).load(function () {
     setTimeout(initDskapiCartWidgetWithRetry, 300);
   });

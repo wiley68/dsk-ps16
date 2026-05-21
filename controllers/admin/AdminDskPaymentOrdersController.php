@@ -11,7 +11,7 @@
  * @Author: Ilko Ivanov
  * @Publisher: Avalon Ltd
  * @Owner: Банка ДСК
- * @Version: 1.2.1
+ * @Version: 1.2.2
  *
  * @property bool $bootstrap Enable Bootstrap styling
  * @property string $table Database table name

@@ -9,7 +9,7 @@
  * @author Ilko Ivanov
  * @publisher Avalon Ltd
  * @owner Банка ДСК
- * @version 1.2.1
+ * @version 1.2.2
  */
 
 /**
@@ -23,17 +23,17 @@
  */
 function DskapiChangeContainer() {
   var dskapi_label_container = document.getElementsByClassName(
-    'dskapi-label-container'
+    "dskapi-label-container",
   )[0];
-  if (dskapi_label_container.style.visibility == 'visible') {
+  if (dskapi_label_container.style.visibility == "visible") {
     // Hide container with fade-out animation
-    dskapi_label_container.style.visibility = 'hidden';
+    dskapi_label_container.style.visibility = "hidden";
     dskapi_label_container.style.opacity = 0;
     dskapi_label_container.style.transition =
-      'visibility 0s, opacity 0.5s ease';
+      "visibility 0s, opacity 0.5s ease";
   } else {
     // Show container with fade-in animation
-    dskapi_label_container.style.visibility = 'visible';
+    dskapi_label_container.style.visibility = "visible";
     dskapi_label_container.style.opacity = 1;
   }
 }
