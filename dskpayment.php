@@ -827,6 +827,8 @@ class Dskpayment extends PaymentModule
         }
         // Product page: load product widget CSS/JS
         if (isset($this->context->controller->php_self) && 'product' === $this->context->controller->php_self) {
+            $this->registerPopupStylesheet();
+
             $productJsPath = _PS_MODULE_DIR_ . $this->name . '/js/dskapi_product.js';
             $productCssPath = _PS_MODULE_DIR_ . $this->name . '/css/dskapi_product.css';
 
@@ -854,6 +856,8 @@ class Dskpayment extends PaymentModule
             && 'order' === $this->context->controller->php_self
             && $step === 1
         ) {
+            $this->registerPopupStylesheet();
+
             $cartJsPath = _PS_MODULE_DIR_ . $this->name . '/js/dskapi_cart.js';
             $cartCssPath = _PS_MODULE_DIR_ . $this->name . '/css/dskapi_cart.css';
 
@@ -887,6 +891,8 @@ class Dskpayment extends PaymentModule
         );
 
         if ($isModulePaymentController) {
+            $this->registerPopupStylesheet();
+
             $paymentJsPath = _PS_MODULE_DIR_ . $this->name . '/js/dskapi_payment.js';
             $paymentCssPath = _PS_MODULE_DIR_ . $this->name . '/css/dskapi_payment.css';
 
@@ -1100,9 +1106,9 @@ class Dskpayment extends PaymentModule
             $dskapi_vnoski_visible_arr[$vnoska] = ($dskapi_vnoski_visible & $bitMask) !== 0 || $defaultVnoski === $vnoska;
         }
 
-        $dskapi_is_mobile = $this->isMobileDevice();
-        $prefix = $dskapi_is_mobile ? 'dskapim' : 'dskapi';
-        $imgPrefix = $dskapi_is_mobile ? 'dskm' : 'dsk';
+        $bannerUrls = self::getPopupBannerUrls(
+            isset($paramsdskapi['dsk_reklama']) ? $paramsdskapi['dsk_reklama'] : 0
+        );
 
         $link = new Link();
         $languageId = isset($this->context->language->id) ? (int) $this->context->language->id : (int) Configuration::get('PS_LANG_DEFAULT');
@@ -1127,18 +1133,8 @@ class Dskpayment extends PaymentModule
             'dskapi_button_status' => $dskapi_button_status,
             'dskapi_maxstojnost' => (float) number_format((float) (isset($paramsdskapi['dsk_maxstojnost']) ? $paramsdskapi['dsk_maxstojnost'] : 0), 2, '.', ''),
             'dskapi_minstojnost' => (float) number_format((float) (isset($paramsdskapi['dsk_minstojnost']) ? $paramsdskapi['dsk_minstojnost'] : 0), 2, '.', ''),
-            'dskapi_PopUp_Detailed_v1' => $prefix . '_PopUp_Detailed_v1',
-            'dskapi_Mask' => $prefix . '_Mask',
-            'dskapi_picture' => DSKAPI_LIVEURL . '/calculators/assets/img/' . $imgPrefix . (isset($paramsdskapi['dsk_reklama']) ? $paramsdskapi['dsk_reklama'] : 0) . '.png',
-            'dskapi_product_name' => $prefix . '_product_name',
-            'dskapi_body_panel_txt3' => $prefix . '_body_panel_txt3',
-            'dskapi_body_panel_txt4' => $prefix . '_body_panel_txt4',
-            'dskapi_body_panel_txt3_left' => $prefix . '_body_panel_txt3_left',
-            'dskapi_body_panel_txt3_right' => $prefix . '_body_panel_txt3_right',
-            'dskapi_sumi_panel' => $prefix . '_sumi_panel',
-            'dskapi_kredit_panel' => $prefix . '_kredit_panel',
-            'dskapi_body_panel_footer' => $prefix . '_body_panel_footer',
-            'dskapi_body_panel_left' => $prefix . '_body_panel_left',
+            'dskapi_picture_desktop' => $bannerUrls['desktop'],
+            'dskapi_picture_mobile' => $bannerUrls['mobile'],
             'dskapi_vnoski_visible_arr' => $dskapi_vnoski_visible_arr,
             'DSKAPI_VERSION' => $this->version,
             'dskapi_sign' => $dskapi_sign,
@@ -1151,6 +1147,41 @@ class Dskpayment extends PaymentModule
         // PrestaShop 1.6.x uses display() instead of fetch()
         // Path is relative to module, not in 'module:' format
         return $this->display(__FILE__, $templatePath);
+    }
+
+    /**
+     * Desktop and mobile banner image URLs for the calculator popup.
+     *
+     * @param int|string $reklamaIndex Banner variant from API (dsk_reklama)
+     *
+     * @return array{desktop: string, mobile: string}
+     */
+    public static function getPopupBannerUrls($reklamaIndex)
+    {
+        $id = (int) $reklamaIndex;
+
+        return array(
+            'desktop' => DSKAPI_LIVEURL . '/calculators/assets/img/dsk' . $id . '.png',
+            'mobile' => DSKAPI_LIVEURL . '/calculators/assets/img/dskm' . $id . '.png',
+        );
+    }
+
+    /**
+     * Register shared popup stylesheet on the front office.
+     *
+     * @return void
+     */
+    private function registerPopupStylesheet()
+    {
+        $cssPath = _PS_MODULE_DIR_ . $this->name . '/css/dskapi_popup.css';
+        if (!file_exists($cssPath)) {
+            return;
+        }
+
+        $cssVersion = filemtime($cssPath);
+        $cssUrl = Tools::getShopDomainSsl(true, true) . __PS_BASE_URI__ . 'modules/' . $this->name
+            . '/css/dskapi_popup.css?v=' . $cssVersion;
+        $this->context->controller->addCSS($cssUrl, 'all');
     }
 
     /**
@@ -1202,13 +1233,9 @@ class Dskpayment extends PaymentModule
     }
 
     /**
-     * Detect if the current visitor uses a mobile device
+     * Detect if the current visitor uses a mobile device (homepage ad panel only).
      *
-     * Uses User-Agent string analysis to determine if the request
-     * comes from a mobile device. This affects CSS class prefixes
-     * and image paths used in templates for responsive styling.
-     *
-     * @return bool True if mobile device detected, false otherwise
+     * @return bool
      */
     private function isMobileDevice()
     {
